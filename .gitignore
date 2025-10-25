@@ -1,0 +1,8 @@
+/guide
+
+# depdencies
+node_modules/
+
+# env vars
+.env
+.env.local

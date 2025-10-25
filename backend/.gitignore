@@ -1,0 +1,6 @@
+/guide
+
+node_modules/
+.env
+*.log
+coverage/
