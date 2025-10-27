@@ -1,0 +1,144 @@
+/*dashboard/home feed styles*/
+.dashboardContainer {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #d4d4d4;
+  margin-bottom: 24px;
+}
+
+.feed { 
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #007acc;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  color: #858585;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+  color: #007acc;
+  background-color: #2d2d30;
+}
+
+.postsSection {
+  margin-top: 24px;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #3e3e42, transparent);
+  margin: 16px 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #252526;
+  border-radius: 8px;
+  border: 1px solid #3e3e42;
+}
+
+.emptyText {
+  font-size: 1rem;
+  color: #d4d4d4;
+  margin-bottom: 4px;
+}
+
+.emptySubtext {
+  color: #858585;
+  font-size: 0.9rem;
+}
+
+.createButton {
+  position: fixed;
+  bottom: 100px;
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.createButton:hover {
+  background-color: #0e639c;
+  transform: scale(1.05);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #252526;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .dashboardContainer {
+    padding: 12px;
+  }
+  
+  .title {
+    font-size: 1.3rem;
+  }
+  
+  .createButton {
+    bottom: 90px;
+    right: 12px;
+  }
+}

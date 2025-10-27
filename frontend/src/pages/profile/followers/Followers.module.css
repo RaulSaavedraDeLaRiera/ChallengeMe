@@ -1,0 +1,68 @@
+/*followers subpage styles*/
+.followersContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1e1e1e;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.closeButton {
+  position: fixed;
+  bottom: 100px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+  transition: all 0.2s ease;
+  z-index: 2000;
+}
+
+.closeButton:hover {
+  background-color: #0e639c;
+  transform: scale(1.05);
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+  background-color: #252526;
+  border-radius: 12px;
+  border: 1px solid #3e3e42;
+  margin-top: 60px;
+}
+
+.emptyIcon {
+  font-size: 80px;
+  color: #3e3e42;
+  margin-bottom: 20px;
+}
+
+.emptyText {
+  font-size: 1.3rem;
+  color: #d4d4d4;
+  margin-bottom: 8px;
+}
+
+.emptySubtext {
+  color: #858585;
+  font-size: 1rem;
+}

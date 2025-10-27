@@ -1,0 +1,18 @@
+/*reusable card component*/
+.card {
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+}
+

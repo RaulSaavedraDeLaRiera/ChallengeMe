@@ -1,0 +1,194 @@
+/*profile page styles*/
+.profileContainer {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.avatarContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar {
+  font-size: 80px;
+  color: #007acc;
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.username {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #d4d4d4;
+  margin-bottom: 4px;
+}
+
+.userEmail {
+  color: #858585;
+  font-size: 0.9rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statIcon {
+  font-size: 32px;
+  color: #007acc;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: #858585;
+}
+
+/*quick actions*/
+.quickActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  color: #d4d4d4;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  text-decoration: none;
+}
+
+.actionButton:hover {
+  background-color: #2d2d30;
+  border-color: #007acc;
+}
+
+.actionButton svg {
+  font-size: 20px;
+  color: #007acc;
+}
+
+.actionCount {
+  margin-left: auto;
+  color: #858585;
+  font-size: 14px;
+}
+
+/*content area*/
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: #252526;
+  border-radius: 8px;
+  border: 1px solid #3e3e42;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  color: #3e3e42;
+  margin-bottom: 16px;
+}
+
+.emptyText {
+  color: #d4d4d4;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.emptySubtext {
+  color: #858585;
+  font-size: 0.9rem;
+}
+
+.logoutButtonIcon {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.logoutButtonIcon:hover {
+  background-color: #2d2d30;
+  color: #f44336;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .profileContainer {
+    padding: 12px;
+  }
+  
+  .avatar {
+    font-size: 60px;
+  }
+  
+  .username {
+    font-size: 1.3rem;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .tabIcon {
+    font-size: 16px;
+  }
+}

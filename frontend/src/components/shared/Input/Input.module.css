@@ -1,0 +1,76 @@
+/*reusable input component*/
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #d4d4d4;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-left: 44px;
+  padding-right: 44px;
+  border: 1px solid #3e3e42;
+  border-radius: 6px;
+  background-color: #2d2d30;
+  color: #d4d4d4;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #858585;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+.eyeButton:hover {
+  color: #d4d4d4;
+}
+
+.input::placeholder {
+  color: #858585;
+}
+
+.error {
+  display: block;
+  color: #f44336;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .input {
+    padding: 10px 14px;
+    padding-left: 36px;
+    padding-right: 36px;
+    font-size: 14px;
+  }
+}
+

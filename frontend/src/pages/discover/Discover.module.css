@@ -1,0 +1,116 @@
+.discoverContainer {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+.filterTabs { 
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #3e3e42;
+  overflow-x: auto;
+}
+
+.filterTab {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: #858585;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filterTab:hover {
+  color: #d4d4d4;
+}
+
+.filterTab.active {
+  color: #007acc;
+  border-bottom-color: #007acc;
+}
+
+.searchContainer {
+  margin-bottom: 24px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  color: #d4d4d4;
+  font-size: 15px;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
+.searchInput::placeholder {
+  color: #858585;
+}
+
+.discoverList {
+  min-height: 400px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  color: #3e3e42;
+  margin-bottom: 16px;
+}
+
+.emptyText {
+  font-size: 1.2rem;
+  color: #d4d4d4;
+  margin-bottom: 8px;
+}
+
+.emptySubtext {
+  color: #858585;
+  font-size: 0.9rem;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .discoverContainer {
+    padding: 12px;
+  }
+  
+  .title {
+    font-size: 1.3rem;
+  }
+  
+  .filterTab {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .filterTabs {
+    gap: 2px;
+  }
+}
+

@@ -1,0 +1,20 @@
+/*layout styles*/
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+  padding-bottom: 80px;
+  background-color: #1e1e1e;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .mainContent {
+    padding-bottom: 70px;
+  }
+}
+

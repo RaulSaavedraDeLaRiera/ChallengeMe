@@ -1,0 +1,52 @@
+/*reusable button component*/
+.button {
+  width: 100%;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary {
+  background-color: #007acc;
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #0e639c;
+}
+
+.secondary {
+  background-color: #3e3e42;
+  color: #d4d4d4;
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #4e4e52;
+}
+
+.danger {
+  background-color: #f44336;
+  color: white;
+}
+
+.danger:hover:not(:disabled) {
+  background-color: #d32f2f;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/*responsive*/
+@media (max-width: 768px) {
+  .button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
