@@ -1,4 +1,4 @@
-/*dashboard/home feed styles*/
+/*home feed styles*/
 .dashboardContainer {
   padding: 16px;
   max-width: 800px;
@@ -54,6 +54,66 @@
 
 .postsSection {
   margin-top: 24px;
+}
+
+.postsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* post card presentation */
+.itemCard {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.postHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.postTitleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.postTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.postMeta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.postAuthor {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.postBody {
+  color: var(--text-primary);
+}
+
+.postFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.likesCount {
+  margin-left: 8px;
+  opacity: 0.8;
 }
 
 .divider {

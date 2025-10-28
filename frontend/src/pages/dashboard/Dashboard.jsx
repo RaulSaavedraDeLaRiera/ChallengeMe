@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { FaPlus, FaChevronUp, FaChevronDown } from 'react-icons/fa'
 import styles from './Dashboard.module.css'
+import CreateModal from '../create/CreateModal'
+import { PostService } from '../../services/post.service'
+import { ChallengeService } from '../../services/challenge.service'
+import { authStore } from '../../utils/authStore'
+import { PostCard } from '../../components/shared'
 
 //home feed: your active challenges and posts from people you follow 
 const Dashboard = () => {
@@ -8,11 +13,63 @@ const Dashboard = () => {
   const [isChallengesExpanded, setIsChallengesExpanded] = useState(() => {
     return sessionStorage.getItem('challengesExpanded') !== 'false'
   })
+  const [posts, setPosts] = useState([])
+  const [myChallenges, setMyChallenges] = useState([])
+  const [loadingFeed, setLoadingFeed] = useState(true)
 
   //save expanded state to session storage
   useEffect(() => {
     sessionStorage.setItem('challengesExpanded', isChallengesExpanded)
   }, [isChallengesExpanded])
+
+  //load feed and my challenges
+  useEffect(() => {
+    const load = async () => {
+      const token = authStore.get()
+      try {
+        let data = []
+        if (token) {
+          try { data = await PostService.feed(token) } catch { /* ignore feed error */ }
+        }
+        if (!data || data.length === 0) {
+          data = await PostService.all()
+        }
+        setPosts(Array.isArray(data) ? data : [])
+      } finally {
+        setLoadingFeed(false)
+      }
+      try {
+        if (token) {
+          const m = await ChallengeService.mine(token)
+          setMyChallenges(Array.isArray(m) ? m : [])
+        } else {
+          setMyChallenges([])
+        }
+      } catch {
+        setMyChallenges([])
+      }
+    }
+    load()
+  }, [])
+
+  const toggleLike = async (postId) => {
+    const token = authStore.get()
+    if (!token) return
+    try {
+      const updated = await PostService.like(postId, token)
+      setPosts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)))
+    } catch { /* ignore like error */ }
+  }
+
+  //get current user id from localStorage
+  const getCurrentUserId = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      return user._id || user.id
+    } catch {
+      return null
+    }
+  }
 
   const toggleChallenges = () => {
     setIsChallengesExpanded(!isChallengesExpanded)
@@ -32,9 +89,25 @@ const Dashboard = () => {
           </div>
           
           {isChallengesExpanded && (
-            <div className={styles.emptyState}>
-              <p className={styles.emptyText}>No active challenges</p>
-              <p className={styles.emptySubtext}>Start a challenge to track your progress</p>
+            <div>
+              {myChallenges.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p className={styles.emptyText}>No active challenges</p>
+                  <p className={styles.emptySubtext}>Start a challenge to track your progress</p>
+                </div>
+              ) : (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {myChallenges.map((c) => (
+                    <li key={c._id} className={styles.itemCard}>
+                      <div className={styles.itemHeader}>
+                        <span className={styles.itemTitle}>{c.title}</span>
+                        <span className={styles.itemMeta}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      {c.description && <div className={styles.itemBody}>{c.description}</div>}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -42,10 +115,27 @@ const Dashboard = () => {
         <div className={styles.divider}></div>
 
         <div className={styles.postsSection}>
-          <div className={styles.emptyState}>
-            <p className={styles.emptyText}>No posts yet</p>
-            <p className={styles.emptySubtext}>Follow people to see their posts and challenges</p>
-          </div>
+          {loadingFeed ? (
+            <div className={styles.emptyState}>
+              <p className={styles.emptyText}>Loading feed...</p>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p className={styles.emptyText}>No posts yet</p>
+              <p className={styles.emptySubtext}>Follow people to see their posts and challenges</p>
+            </div>
+          ) : (
+            <div className={styles.postsList}>
+              {posts.map((p) => (
+                <PostCard 
+                  key={p._id} 
+                  post={p} 
+                  onLike={toggleLike}
+                  currentUserId={getCurrentUserId()}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -57,12 +147,27 @@ const Dashboard = () => {
       </button>
 
       {showCreateModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3>Create</h3>
-            <button onClick={() => setShowCreateModal(false)}>Close</button>
-          </div>
-        </div>
+        <CreateModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => {
+            //refresh feed and challenges after creation
+            (async () => {
+              const token = authStore.get() 
+              try {
+                let data = []
+                if (token) { try { data = await PostService.feed(token) } catch { /* ignore feed error */ } }
+                if (!data || data.length === 0) { data = await PostService.all() }
+                setPosts(Array.isArray(data) ? data : [])
+              } catch { /* ignore refresh  */ }
+              try {
+                if (token) {
+                  const m = await ChallengeService.mine(token)
+                  setMyChallenges(Array.isArray(m) ? m : [])
+                }
+              } catch { /* ignore for the moment */ }
+            })()
+          }}
+        />
       )}
     </div>
   )
