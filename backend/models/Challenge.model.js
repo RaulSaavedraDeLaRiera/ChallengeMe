@@ -17,6 +17,7 @@ const challengeSchema = new mongoose.Schema({
     name: {
       type: String,
       required: true,
+      //other may not use, personalized types not supported for the momment   
       enum: ['run', 'bike', 'walk', 'push-ups', 'sit-ups', 'squats', 'plank', 'other']
     },
     target: {
