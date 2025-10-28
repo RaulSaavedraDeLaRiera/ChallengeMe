@@ -1,3 +1,4 @@
+/*register page styles*/
 .registerContainer {
   width: 100%;
   max-width: 450px;
@@ -5,8 +6,8 @@
 
 .registerCard {
   width: 100%;
-  background-color: #252526;
-  border: 1px solid #3e3e42;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 24px;
   position: relative;
@@ -34,7 +35,7 @@
 
 .progressLine {
   height: 4px;
-  background: linear-gradient(90deg, #4ecdc4, #007acc);
+  background: linear-gradient(90deg, #4ecdc4, var(--accent-primary));
   border-radius: 2px;
   transition: width 0.3s ease;
   position: absolute;
@@ -58,7 +59,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%) translateX(50%);
-  color: #007acc;
+  color: var(--accent-primary);
   font-size: 20px;
   z-index: 1;
 }
@@ -75,12 +76,12 @@
 .registerTitle {
   font-size: 2rem;
   font-weight: 600;
-  color: #d4d4d4;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .registerSubtitle {
-  color: #858585;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -92,31 +93,31 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #d4d4d4;
+  color: var(--text-primary);
 }
 
 .formInput {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #3e3e42;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background-color: #2d2d30;
-  color: #d4d4d4;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   font-size: 16px;
   transition: border-color 0.2s ease;
 }
 
 .formInput:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: var(--accent-primary);
 }
 
 .formInput::placeholder {
-  color: #858585;
+  color: var(--text-muted);
 }
 
 .errorMessage {
-  color: #f44336;
+  color: var(--error);
   margin-bottom: 16px;
   font-size: 14px;
 }
@@ -130,12 +131,12 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  background-color: #007acc;
+  background-color: var(--accent-primary);
   color: white;
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: #0e639c;
+  background-color: var(--accent-secondary);
 }
 
 .submitButton:disabled {
@@ -146,17 +147,17 @@
 .registerFooter {
   text-align: center;
   margin-top: 24px;
-  color: #858585;
+  color: var(--text-muted);
 }
 
 .registerLink {
-  color: #007acc;
+  color: var(--accent-primary);
   text-decoration: none;
   font-weight: 500;
 }
 
 .registerLink:hover {
-  color: #0e639c;
+  color: var(--accent-secondary);
   text-decoration: underline;
 }
 

@@ -17,7 +17,7 @@
   display: flex;
   justify-content: center;
   margin-bottom: 16px;
-  color: #007acc;
+  color: var(--accent-primary);
   font-size: 48px;
 }
 
@@ -29,7 +29,7 @@
   position: absolute;
   left: 16px;
   top: 40px;
-  color: #858585;
+  color: var(--text-muted);
   z-index: 1;
   pointer-events: none;
 }
@@ -37,19 +37,19 @@
 .loginTitle {
   font-size: 2rem;
   font-weight: 600;
-  color: #d4d4d4;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .loginSubtitle {
-  color: #858585;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
 /*estilos específicos de la página de login*/
 
 .errorMessage {
-  color: #f44336;
+  color: var(--error);
   margin-bottom: 16px;
   font-size: 14px;
 }
@@ -57,17 +57,17 @@
 .loginFooter {
   text-align: center;
   margin-top: 24px;
-  color: #858585;
+  color: var(--text-muted);
 }
 
 .loginLink {
-  color: #007acc;
+  color: var(--accent-primary);
   text-decoration: none;
   font-weight: 500;
 }
 
 .loginLink:hover {
-  color: #0e639c;
+  color: var(--accent-secondary);
   text-decoration: underline;
 }
 

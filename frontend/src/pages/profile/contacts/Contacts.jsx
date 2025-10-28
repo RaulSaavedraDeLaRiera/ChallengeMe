@@ -18,7 +18,7 @@ const Contacts = () => {
           <p className={styles.emptyText}>No contacts yet</p>
           <p className={styles.emptySubtext}>Start following people</p>
         </div>
-      </div>
+      </div> 
     </div>
   )
 }

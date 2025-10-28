@@ -166,7 +166,7 @@ body {
 
 .progress-line {
   height: 4px;
-  background: linear-gradient(90deg, #4ecdc4, #007acc);
+  background: linear-gradient(90deg, #4ecdc4, var(--accent-primary));
   border-radius: 2px;
   transition: width 0.3s ease;
   position: absolute;
@@ -190,7 +190,7 @@ body {
   position: absolute;
   top: 50%;
   transform: translateY(-50%) translateX(50%);
-  color: #007acc;
+  color: var(--accent-primary);
   font-size: 20px;
   z-index: 1;
 }
