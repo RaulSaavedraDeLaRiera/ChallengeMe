@@ -39,9 +39,11 @@ const createChallenge = async (req, res) => {
     
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name');
+    console.log(`challenge:create id=${challenge._id.toString()} title=${challenge.title}`)
     
     res.status(201).json(challenge);
   } catch (error) {
+    console.error(`challenge:create error=${error.message}`)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -66,9 +68,11 @@ const joinChallenge = async (req, res) => {
     
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name email');
+    console.log(`challenge:join id=${challenge._id.toString()} user=${req.userId}`)
     
     res.json(challenge);
   } catch (error) {
+    console.error('challenge:join error', error.message)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

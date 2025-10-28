@@ -23,9 +23,11 @@ const followUser = async (req, res) => {
       following: userId
     });
     await follow.save();
+    console.log(`follow:create follower=${req.userId} following=${userId}`)
 
     res.json({ message: 'User followed successfully' });
   } catch (error) {
+    console.error('follow:create error', error.message)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -41,8 +43,11 @@ const unfollowUser = async (req, res) => {
       return res.status(404).json({ message: 'Not following this user' });
     }
 
+    console.log(`follow:delete follower=${req.userId} following=${userId}`)
     res.json({ message: 'User unfollowed successfully' });
   } catch (error) {
+    console.error('follow:delete error', error.message)
+    console.error(`follow:create error=${error.message}`)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -54,6 +59,7 @@ const getFollowers = async (req, res) => {
     const follows = await Follow.find({ following: userId }).populate('follower', 'name email');
     res.json(follows.map(f => f.follower));
   } catch (error) {
+    console.error(`follow:delete error=${error.message}`)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

@@ -53,18 +53,22 @@ const getFeed = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
+    const title = ((req.body.title ?? '') + '').trim().slice(0, 20)
     const post = new Post({
       user: req.userId,
       challenge: req.body.challenge || null,
+      title: title || '',
       content: req.body.content
     });
     
     await post.save();
     await post.populate('user', 'name email');
     await post.populate('challenge', 'title');
+    console.log(`post:create id=${post._id.toString()} user=${post.user?.name} title=${post.title}`)
     
     res.status(201).json(post);
   } catch (error) {
+    console.error(`post:create error=${error.message}`)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

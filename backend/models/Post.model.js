@@ -7,6 +7,12 @@ const postSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  //optional title for the post
+  title: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   challenge: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Challenge',
