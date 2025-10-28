@@ -1,0 +1,101 @@
+/*challenge modal form styles*/
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.textAreaSm {
+  resize: vertical;
+  width: 100%;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.error {
+  margin-bottom: 12px; 
+}
+
+.rowDates {
+  display: flex;
+  gap: 12px;
+}
+
+.rowDates .formGroup {
+  flex: 1;
+}
+
+.activities {
+  margin: 12px 0;
+}
+
+.activitiesTitle {
+  margin-bottom: 8px;
+}
+
+.activityRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.activityInputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.selectType {
+  width: 130px;
+  height: 40px;
+}
+
+.inputNumber {
+  width: 90px;
+  height: 40px;
+}
+
+.unitLabel {
+  min-width: 56px;
+  text-align: left;
+  opacity: 0.8;
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.confirmBtn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--accent-primary);
+  color: #fff;
+  border: 1px solid var(--accent-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.removeBtn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--text-muted);
+  color: #fff;
+  border: 1px solid var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}

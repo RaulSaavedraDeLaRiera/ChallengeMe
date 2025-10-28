@@ -1,0 +1,21 @@
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.counter {
+  font-size: 12px;
+  opacity: 0.6;
+  text-align: right;
+  margin-top: 4px; 
+}
+
+.textArea {
+  resize: vertical;
+  width: 100%;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.error {
+  margin-bottom: 12px;
+}

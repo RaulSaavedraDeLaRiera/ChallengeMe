@@ -1,0 +1,92 @@
+.postCard {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.postHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.authorName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.headerDate {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.postDate {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.titleRight {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: right;
+}
+
+.postContent {
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.postFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.likeArea {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.likeButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.likeButton:hover {
+  color: var(--accent-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.likeButton.liked {
+  color: #ffffff;
+}
+
+.likesCount {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
