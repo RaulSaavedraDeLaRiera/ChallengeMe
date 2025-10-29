@@ -11,8 +11,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
@@ -34,6 +34,16 @@ body {
   --success: #4caf50;
   --error: #f44336;
   --warning: #ff9800;
+  --white: #ffffff;
+  --black: #000000;
+  --overlay: rgba(0, 0, 0, 0.7);
+  --overlay-dark: rgba(0, 0, 0, 0.9);
+  --shadow: rgba(0, 0, 0, 0.1);
+  --shadow-accent: rgba(0, 122, 204, 0.1);
+  --shadow-accent-strong: rgba(0, 122, 204, 0.3);
+  --gradient-teal: #4ecdc4;
+  --bg-dark: #222;
+  --border-dark: #444;
 }
 
 /*button styles*/
@@ -120,7 +130,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow);
 }
 
 /*text styles*/
@@ -166,7 +176,7 @@ body {
 
 .progress-line {
   height: 4px;
-  background: linear-gradient(90deg, #4ecdc4, var(--accent-primary));
+  background: linear-gradient(90deg, var(--gradient-teal), var(--accent-primary));
   border-radius: 2px;
   transition: width 0.3s ease;
   position: absolute;

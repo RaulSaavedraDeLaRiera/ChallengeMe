@@ -25,7 +25,7 @@ const Register = () => {
     setError('')
   }
 
-  //calculate progress based on filled fields
+  //calculate progress based on filled 
   const calculateProgress = () => {
     let filled = 0
     if (formData.name) filled++
@@ -71,7 +71,7 @@ const Register = () => {
 
       if (response.ok) {
         //save token in storage
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('token', data.token) 
         //redirect to dashboard after registration
         navigate('/dashboard')
       } else {

@@ -4,7 +4,7 @@ import { PostService } from '../../services/post.service'
 import { authStore } from '../../utils/authStore'
 import styles from './PostModalForm.module.css'
 
-//post creation form modal component with headline and message fields
+//post creation form modal component completed
 
 export const PostModalForm = ({ onSuccess }) => {
   const [title, setTitle] = useState('')

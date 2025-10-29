@@ -7,7 +7,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #d4d4d4;
+  color: var(--text-primary);
 }
 
 .inputWrapper {
@@ -19,17 +19,17 @@
   padding: 12px 16px;
   padding-left: 44px;
   padding-right: 44px;
-  border: 1px solid #3e3e42;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background-color: #2d2d30;
-  color: #d4d4d4;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   font-size: 16px;
   transition: border-color 0.2s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: var(--accent-primary);
 }
 
 .eyeButton {
@@ -39,7 +39,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #858585;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -50,16 +50,16 @@
 }
 
 .eyeButton:hover {
-  color: #d4d4d4;
+  color: var(--text-primary);
 }
 
 .input::placeholder {
-  color: #858585;
+  color: var(--text-muted);
 }
 
 .error {
   display: block;
-  color: #f44336;
+  color: var(--error);
   margin-top: 4px;
   font-size: 14px;
 }

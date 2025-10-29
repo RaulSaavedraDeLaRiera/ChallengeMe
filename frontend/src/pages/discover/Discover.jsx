@@ -4,7 +4,9 @@ import styles from './Discover.module.css'
 import { PostService } from '../../services/post.service'
 import { authStore } from '../../utils/authStore'
 import { ChallengeService } from '../../services/challenge.service'
-import { PostCard } from '../../components/shared'
+import { UserChallengeService } from '../../services/userChallenge.service'
+import { PostCard } from '../../components/shared/PostCard/PostCard'
+import { ChallengeCard } from '../../components/shared/ChallengeCard/ChallengeCard'
 
 //discover page: find challenges, posts and people
 const Discover = () => {
@@ -13,6 +15,7 @@ const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [posts, setPosts] = useState([])
   const [challenges, setChallenges] = useState([])
+  const [userChallenges, setUserChallenges] = useState([])
   const [loading, setLoading] = useState(true)
 
   //load followed feed first if empty, latest posts
@@ -38,6 +41,17 @@ const Discover = () => {
       try {
         const allChallenges = await ChallengeService.all()
         setChallenges(Array.isArray(allChallenges) ? allChallenges : [])
+        
+        //load user challenges to check join status
+        const token = authStore.get()
+        if (token) {
+          try {
+            const uc = await UserChallengeService.mine(token)
+            setUserChallenges(Array.isArray(uc) ? uc : [])
+          } catch {
+            setUserChallenges([])
+          }
+        }
       } catch {
         setChallenges([])
       }
@@ -45,16 +59,82 @@ const Discover = () => {
     load()
   }, [])
 
-  const joinChallenge = async (id) => {
+  const isChallengeJoined = (challengeId) => {
+    if (!Array.isArray(userChallenges)) return false
+    return userChallenges.some(uc => 
+      uc && 
+      uc.challenge && 
+      uc.challenge._id === challengeId && 
+      uc.status === 'active'
+    )
+  }
+
+  const handleJoinChallenge = async (challengeId) => {
     const token = authStore.get()
-    if (!token) { return }
+    if (!token) return
+    
     try {
-      await ChallengeService.join(id, token)
-      // joined
-    } catch (e) {
-      // ignore error
+      const response = await UserChallengeService.join(challengeId, token)
+      
+      //get userChallenge (either from response or response.userChallenge)
+      const userChallenge = response.userChallenge || response
+      
+      //check if user was already participating (active)
+      if (response.alreadyJoined) {
+        //update existing or add to local state
+        setUserChallenges(prev => {
+          const exists = prev.some(uc => 
+            uc && uc.challenge && uc.challenge._id === challengeId
+          )
+          if (exists) {
+            return prev.map(uc => 
+              uc && uc.challenge && uc.challenge._id === challengeId 
+                ? userChallenge 
+                : uc
+            )
+          }
+          return [...prev, userChallenge]
+        })
+        
+        //update participant count in local state
+        setChallenges(prev => prev.map(challenge => {
+          if (challenge._id === challengeId) {
+            const participants = challenge.participants || []
+            const userId = userChallenge.user?._id || userChallenge.user
+            if (!participants.some(p => (p._id || p).toString() === userId.toString())) {
+              return { ...challenge, participants: [...participants, userId] }
+            }
+          }
+          return challenge
+        }))
+        return
+      }
+      
+      //new join or reactivation
+      setUserChallenges(prev => {
+        //remove any existing (abandoned) entry and add the new one
+        const filtered = prev.filter(uc => 
+          !(uc && uc.challenge && uc.challenge._id === challengeId)
+        )
+        return [...filtered, userChallenge]
+      })
+      
+      //update participant count in local state
+      setChallenges(prev => prev.map(challenge => {
+        if (challenge._id === challengeId) {
+          const participants = challenge.participants || []
+          const userId = userChallenge.user?._id || userChallenge.user
+          if (!participants.some(p => (p._id || p).toString() === userId.toString())) {
+            return { ...challenge, participants: [...participants, userId] }
+          }
+        }
+        return challenge
+      }))
+    } catch (error) {
+      console.error('Error joining challenge:', error)
     }
   }
+
 
   const toggleLike = async (postId) => {
     const token = authStore.get()
@@ -62,7 +142,7 @@ const Discover = () => {
     try {
       const updated = await PostService.like(postId, token)
       setPosts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)))
-    } catch { /* ignore like error */ }
+    } catch { /* ignore */ }
   }
 
   //get current user id from localStorage
@@ -174,25 +254,22 @@ const Discover = () => {
                 <p className={styles.emptyText}>No challenges yet</p>
               </div>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {challenges.map((c) => (
-                  <li key={c._id} className={styles.itemCard}>
-                    <div className={styles.itemHeader}>
-                      <span className={styles.itemTitle}>{c.title}</span>
-                      <span className={styles.itemMeta}>{new Date(c.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    {c.description && <div className={styles.itemBody}>{c.description}</div>}
-                    <div style={{ marginTop: 8 }}>
-                      <button className="btn btn-primary" onClick={() => joinChallenge(c._id)}>Join</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className={styles.challengesList}>
+                {challenges.map((challenge) => (
+                    <ChallengeCard 
+                      key={challenge._id} 
+                      challenge={challenge}
+                      currentUserId={getCurrentUserId()}
+                      onJoin={handleJoinChallenge}
+                      isJoined={isChallengeJoined(challenge._id)}
+                    />
+                  ))}
+              </div>
             )}
           </div>
         )}
       </div>
-    </div>
+    </div> 
   )
 }
 

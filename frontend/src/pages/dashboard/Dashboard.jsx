@@ -3,11 +3,12 @@ import { FaPlus, FaChevronUp, FaChevronDown } from 'react-icons/fa'
 import styles from './Dashboard.module.css'
 import CreateModal from '../create/CreateModal'
 import { PostService } from '../../services/post.service'
-import { ChallengeService } from '../../services/challenge.service'
+import { UserChallengeService } from '../../services/userChallenge.service'
 import { authStore } from '../../utils/authStore'
-import { PostCard } from '../../components/shared'
+import { PostCard, UserChallengeCard } from '../../components/shared'
 
 //home feed: your active challenges and posts from people you follow 
+
 const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isChallengesExpanded, setIsChallengesExpanded] = useState(() => {
@@ -20,7 +21,7 @@ const Dashboard = () => {
   //save expanded state to session storage
   useEffect(() => {
     sessionStorage.setItem('challengesExpanded', isChallengesExpanded)
-  }, [isChallengesExpanded])
+  }, [isChallengesExpanded]) 
 
   //load feed and my challenges
   useEffect(() => {
@@ -29,7 +30,7 @@ const Dashboard = () => {
       try {
         let data = []
         if (token) {
-          try { data = await PostService.feed(token) } catch { /* ignore feed error */ }
+          try { data = await PostService.feed(token) } catch {/* ignore */}
         }
         if (!data || data.length === 0) {
           data = await PostService.all()
@@ -40,7 +41,7 @@ const Dashboard = () => {
       }
       try {
         if (token) {
-          const m = await ChallengeService.mine(token)
+          const m = await UserChallengeService.mine(token)
           setMyChallenges(Array.isArray(m) ? m : [])
         } else {
           setMyChallenges([])
@@ -58,10 +59,10 @@ const Dashboard = () => {
     try {
       const updated = await PostService.like(postId, token)
       setPosts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)))
-    } catch { /* ignore like error */ }
+    } catch { /* ignore like error */}
   }
 
-  //get current user id from localStorage
+  // get current user id from localStorage
   const getCurrentUserId = () => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -71,8 +72,23 @@ const Dashboard = () => {
     }
   }
 
+
+
   const toggleChallenges = () => {
     setIsChallengesExpanded(!isChallengesExpanded)
+  }
+
+  //refresh challenges after progress update
+  const handleProgressUpdate = async (challengeId) => {
+    const token = authStore.get()
+    if (!token) return
+    
+    try {
+      const m = await UserChallengeService.mine(token)
+      setMyChallenges(Array.isArray(m) ? m : [])
+    } catch {
+      //ignore error
+    }
   }
 
   return (
@@ -96,17 +112,16 @@ const Dashboard = () => {
                   <p className={styles.emptySubtext}>Start a challenge to track your progress</p>
                 </div>
               ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {myChallenges.map((c) => (
-                    <li key={c._id} className={styles.itemCard}>
-                      <div className={styles.itemHeader}>
-                        <span className={styles.itemTitle}>{c.title}</span>
-                        <span className={styles.itemMeta}>{new Date(c.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      {c.description && <div className={styles.itemBody}>{c.description}</div>}
-                    </li>
+                <div className={styles.challengesList}>
+                  {myChallenges.map((userChallenge) => (
+                    <UserChallengeCard 
+                      key={userChallenge._id} 
+                      userChallenge={userChallenge}
+                      currentUserId={getCurrentUserId()}
+                      onProgressUpdate={handleProgressUpdate}
+                    />
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           )}
@@ -161,10 +176,10 @@ const Dashboard = () => {
               } catch { /* ignore refresh  */ }
               try {
                 if (token) {
-                  const m = await ChallengeService.mine(token)
+                  const m = await UserChallengeService.mine(token)
                   setMyChallenges(Array.isArray(m) ? m : [])
                 }
-              } catch { /* ignore for the moment */ }
+              } catch { /* ignore*/ }
             })()
           }}
         />

@@ -22,6 +22,10 @@ const getUserChallenges = async (req, res) => {
 };
 
 const joinChallenge = async (req, res) => {
+  try {
+    const { challengeId } = req.params;
+    
+    const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
       return res.status(404).json({ message: 'Challenge not found' });
     }
@@ -31,8 +35,8 @@ const joinChallenge = async (req, res) => {
       challenge: challengeId
     });
     
-    //return existing userChallenge 
-    if (existingUserChallenge) {
+    //if exists and is active, return it
+    if (existingUserChallenge && existingUserChallenge.status === 'active') {
       await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator')
       await existingUserChallenge.populate('challenge.creator', 'name email')
       
@@ -41,6 +45,40 @@ const joinChallenge = async (req, res) => {
         userChallenge: existingUserChallenge,
         alreadyJoined: true
       });
+    }
+    
+    //if exists but was abandoned, reactivate it
+    if (existingUserChallenge && existingUserChallenge.status === 'abandoned') {
+      //reset progress to 0
+      const activitiesProgress = challenge.activities.map(activity => ({
+        activityId: activity.name,
+        progress: 0,
+        lastUpdated: new Date()
+      }));
+      
+      existingUserChallenge.status = 'active'
+      existingUserChallenge.activitiesProgress = activitiesProgress
+      existingUserChallenge.completedAt = undefined
+      existingUserChallenge.joinedAt = new Date()
+      
+      await existingUserChallenge.save()
+      
+      //add user to participants if not already there
+      if (!challenge.participants.includes(req.userId)) {
+        challenge.participants.push(req.userId)
+        await challenge.save()
+      }
+      
+      await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator')
+      await existingUserChallenge.populate('challenge.creator', 'name email')
+      
+      console.log(`userChallenge:rejoin user=${req.userId} challenge=${challengeId}`)
+      
+      return res.status(200).json({
+        message: 'Rejoined challenge',
+        userChallenge: existingUserChallenge,
+        alreadyJoined: false
+      })
     }
     
     //init progress for all activities
@@ -96,6 +134,10 @@ const getChallengeProgress = async (req, res) => {
 };
 
 const updateActivityProgress = async (req, res) => {
+  try {
+    const { challengeId } = req.params;
+    const { activityId, progress } = req.body;
+    
     if (!activityId || progress === undefined) {
       return res.status(400).json({ message: 'activityId and progress are required' });
     }
@@ -176,6 +218,17 @@ const updateChallengeStatus = async (req, res) => {
     userChallenge.completedAt = new Date();
     
     await userChallenge.save();
+    
+    //if abandoning, remove user from challenge participants
+    if (status === 'abandoned') {
+      const challenge = await Challenge.findById(challengeId);
+      if (challenge && challenge.participants) {
+        challenge.participants = challenge.participants.filter(
+          participantId => participantId.toString() !== req.userId.toString()
+        );
+        await challenge.save();
+      }
+    }
     
     console.log(`userChallenge:updateStatus user=${req.userId} challenge=${challengeId} status=${status}`);
     

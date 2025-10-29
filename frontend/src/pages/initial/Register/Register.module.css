@@ -35,7 +35,7 @@
 
 .progressLine {
   height: 4px;
-  background: linear-gradient(90deg, #4ecdc4, var(--accent-primary));
+  background: linear-gradient(90deg, var(--gradient-teal), var(--accent-primary));
   border-radius: 2px;
   transition: width 0.3s ease;
   position: absolute;

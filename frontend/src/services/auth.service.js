@@ -1,5 +1,6 @@
 import { http } from './http'
 
+//authentication service: register and login
 export const AuthService = {
   register: (payload) => http('/api/auth/register', { 
     method: 'POST',
@@ -12,5 +13,6 @@ export const AuthService = {
   profile: (token) => http('/api/users/me', { 
     method: 'GET',
     token
-  })
+  }), 
+  getUserById: (userId) => http(`/api/users/${userId}`, { method: 'GET' })
 }

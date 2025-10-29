@@ -1,11 +1,11 @@
-//service for challenges api calls
+//service for general challenges api calls
 import { http } from './http'
 
 export const ChallengeService = {
   //create a new challenge with activities 
   create: ({ title, subtitle, description, activities, startDate, endDate }, token) =>
     http('/api/challenges', {
-      method: 'POST',
+      method: 'POST', 
       body: {
         title,
         subtitle,
@@ -17,14 +17,11 @@ export const ChallengeService = {
       token
     }),
 
-  //list challenges created and joined
-  mine: (token) => http('/api/challenges/me', { method: 'GET', token }),
-
-  //list all challenges
+  //list all challenges (for discover)
   all: () => http('/api/challenges', { method: 'GET' }),
 
-  //join a challenge
-  join: (challengeId, token) => http(`/api/challenges/${challengeId}/join`, { method: 'PUT', token })
+  //get challenge by id
+  getById: (challengeId) => http(`/api/challenges/${challengeId}`, { method: 'GET' })
 }
 
 
