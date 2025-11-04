@@ -31,9 +31,9 @@
 }
 
 .avatar {
-  font-size: 80px;
-  color: var(--accent-primary);
-}
+  width: 64px;
+  height: 64px;
+} 
 
 .userInfo {
   flex: 1;

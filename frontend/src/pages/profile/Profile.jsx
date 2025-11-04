@@ -8,10 +8,11 @@ import { FollowService } from '../../services/follow.service'
 import { PostService } from '../../services/post.service'
 import { ChallengeService } from '../../services/challenge.service'
 import { UserChallengeService } from '../../services/userChallenge.service'
+import { Avatar } from '../../components/shared'
 
 //profile page: stats and navigation to subpages
 const Profile = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate() 
   const [me, setMe] = useState(null) 
   const [followersCount, setFollowersCount] = useState(0)
   const [contactsCount, setContactsCount] = useState(0)
@@ -90,7 +91,7 @@ const Profile = () => {
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.avatarContainer}>
-            <FaUserCircle className={styles.avatar} />
+            <Avatar name={me?.name} className={styles.avatar} />
           </div>
           <div className={styles.userInfo}>
             <h2 className={styles.username}>{me?.name || 'Your Name'}</h2>

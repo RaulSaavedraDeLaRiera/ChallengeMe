@@ -3,6 +3,7 @@ export { Input } from './Input/Input'
 export { Card } from './Card/Card'
 export { Container } from './Container/Container'
 export { PostCard } from './PostCard/PostCard'
-export { ChallengeCard } from './ChallengeCard/ChallengeCard'
+export { ChallengeCard } from './ChallengeCard/ChallengeCard' 
 export { UserChallengeCard } from './UserChallengeCard/UserChallengeCard'
-
+export { Avatar } from './Avatar/Avatar'  
+ 

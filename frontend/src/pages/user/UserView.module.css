@@ -55,8 +55,8 @@
 }
 
 .avatar {
-  font-size: 64px;
-  color: var(--accent-primary);
+  width: 64px;
+  height: 64px;
 }
 
 .userDetails {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { FaUsers, FaTimes, FaUserCircle } from 'react-icons/fa'
 import styles from './Followers.module.css'
 import { FollowService } from '../../../services/follow.service'
+import { Avatar } from '../../../components/shared'
 
 //followers subpage: list of people who follow you
 const Followers = () => {
@@ -60,14 +61,14 @@ const Followers = () => {
                   className={styles.item}
                   onClick={() => handleUserClick(userId)}
                 >
-                  <FaUserCircle className={styles.itemAvatar} />
+                  <Avatar name={u.name} className={styles.itemAvatar} />
                   <div className={styles.itemInfo}>
                     <span className={styles.itemName}>{u.name || 'User'}</span>
                     <span className={styles.itemEmail}>{u.email || ''}</span>
                   </div>
                 </div>
               )
-            })}
+            })} 
           </div>
         )}
       </div>

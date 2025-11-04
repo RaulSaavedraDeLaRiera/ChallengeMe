@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaUserFriends, FaTimes, FaUserCircle } from 'react-icons/fa'
+import { FaUserFriends, FaTimes } from 'react-icons/fa'
 import styles from './Contacts.module.css'
 import { FollowService } from '../../../services/follow.service'
+import { Avatar } from '../../../components/shared' 
 
 //contacts subpage: list of people you follow
 const Contacts = () => {
@@ -32,14 +33,14 @@ const Contacts = () => {
       } catch {
         setContacts([])
       } finally {
-        setLoading(false)
+        setLoading(false) 
       }
     }
     load()
   }, [])
 
   return (
-    <div className={styles.contactsContainer}>
+    <div className={styles.contactsContainer}> 
       <button className={styles.closeButton} onClick={() => navigate('/profile')}>
         <FaTimes />
       </button>
@@ -65,7 +66,7 @@ const Contacts = () => {
                   className={styles.item}
                   onClick={() => handleUserClick(userId)}
                 >
-                  <FaUserCircle className={styles.itemAvatar} />
+                  <Avatar name={u.name} className={styles.itemAvatar} />
                   <div className={styles.itemInfo}>
                     <span className={styles.itemName}>{u.name || 'User'}</span>
                     <span className={styles.itemEmail}>{u.email || ''}</span>

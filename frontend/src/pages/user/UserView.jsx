@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FaUserCircle, FaCamera, FaRunning, FaUserPlus, FaUserCheck, FaArrowLeft } from 'react-icons/fa'
+import { FaCamera, FaRunning, FaUserPlus, FaUserCheck, FaArrowLeft } from 'react-icons/fa'
 import { UserService } from '../../services/user.service'
 import { FollowService } from '../../services/follow.service'
 import { PostService } from '../../services/post.service'
 import { ChallengeService } from '../../services/challenge.service'
 import { UserChallengeService } from '../../services/userChallenge.service'
 import { authStore } from '../../utils/authStore'
-import { PostCard } from '../../components/shared'
+import { PostCard, Avatar } from '../../components/shared' 
 import { ChallengeCard } from '../../components/shared/ChallengeCard/ChallengeCard'
 import styles from './UserView.module.css'
 //user view page: public user profile with content feed and follow button
@@ -148,7 +148,7 @@ const UserView = () => {
       
       <div className={styles.header}>
         <div className={styles.userInfo}>
-          <FaUserCircle className={styles.avatar} />
+          <Avatar name={user?.name} className={styles.avatar} />
           <div className={styles.userDetails}>
             <h2 className={styles.username}>{user.name || 'User'}</h2>
             <p className={styles.userEmail}>{user.email || ''}</p>

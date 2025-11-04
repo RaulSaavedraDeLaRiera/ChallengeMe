@@ -139,12 +139,12 @@
 }
 
 .userCardAvatar {
-  font-size: 40px;
-  color: var(--accent-primary);
+  width: 40px;
+  height: 40px;
 }
 
 .userCardInfo {
-  display: flex;
+  display: flex; 
   flex-direction: column;
   gap: 4px;
   flex: 1;

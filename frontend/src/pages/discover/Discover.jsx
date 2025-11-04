@@ -9,7 +9,8 @@ import { UserChallengeService } from '../../services/userChallenge.service'
 import { UserService } from '../../services/user.service'
 import { PostCard } from '../../components/shared/PostCard/PostCard'
 import { ChallengeCard } from '../../components/shared/ChallengeCard/ChallengeCard'
-
+import { Avatar } from '../../components/shared'
+ 
 //discover page: find challenges, posts and people
 const Discover = () => {
   const navigate = useNavigate()
@@ -326,7 +327,7 @@ const Discover = () => {
                     className={styles.userCard}
                     onClick={() => handleUserClick(user._id || user.id)}
                   >
-                    <FaUserCircle className={styles.userCardAvatar} />
+                    <Avatar name={user.name} className={styles.userCardAvatar} />
                     <div className={styles.userCardInfo}>
                       <span className={styles.userCardName}>{user.name || 'User'}</span>
                       <span className={styles.userCardEmail}>{user.email || ''}</span>
