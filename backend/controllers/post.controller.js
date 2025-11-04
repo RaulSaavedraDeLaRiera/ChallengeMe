@@ -31,6 +31,11 @@ const getFeed = async (req, res) => {
       const follows = await Follow.find({ follower: userId });
       const followingIds = follows.map(f => f.following);
       
+      //if not following anyone, return empty array 
+      if (followingIds.length === 0) {
+        return res.json([]);
+      }
+      
       //get posts from users you follow
       posts = await Post.find({ user: { $in: followingIds } })
         .populate('user', 'name email')
@@ -38,14 +43,16 @@ const getFeed = async (req, res) => {
         .populate('likes', 'name')
         .populate('comments.user', 'name')
         .sort({ createdAt: -1 });
+      
+      //filter to ensure only posts from follow 
+      const followingIdsSet = new Set(followingIds.map(id => id.toString()));
+      posts = posts.filter(post => {
+        const postUserId = post.user?._id || post.user;
+        return postUserId && followingIdsSet.has(postUserId.toString());
+      });
     } else {
-      //if not logged in, show all posts
-      posts = await Post.find()
-        .populate('user', 'name email')
-        .populate('challenge', 'title')
-        .populate('likes', 'name')
-        .populate('comments.user', 'name')
-        .sort({ createdAt: -1 });
+      //if not logged in, return empty
+      return res.json([]);
     }
     
     res.json(posts);

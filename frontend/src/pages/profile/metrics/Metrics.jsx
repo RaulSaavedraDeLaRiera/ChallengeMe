@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
-import { FaRunning, FaBicycle, FaWalking, FaDumbbell, FaHeart, FaStar } from 'react-icons/fa'
+import { FaRunning, FaBicycle, FaWalking, FaDumbbell, FaHeart, FaStar, FaHandRock, FaFistRaised } from 'react-icons/fa'
 import { UserChallengeService } from '../../../services/userChallenge.service'
 import { authStore } from '../../../utils/authStore'
 import styles from './Metrics.module.css'
@@ -33,11 +33,17 @@ const ACTIVITY_CONFIG = {
   'run': { Icon: FaRunning, color: 'rgba(0, 171, 169, 1)', name: 'Run' },
   'bike': { Icon: FaBicycle, color: 'rgba(255, 87, 34, 1)', name: 'Bike' },
   'walk': { Icon: FaWalking, color: 'rgba(76, 175, 80, 1)', name: 'Walk' },
-  'push-ups': { Icon: FaDumbbell, color: 'rgba(255, 152, 0, 1)', name: 'Push-ups' },
+  'push-ups': { Icon: FaHandRock, color: 'rgba(255, 152, 0, 1)', name: 'Push-ups' },
   'sit-ups': { Icon: FaDumbbell, color: 'rgba(156, 39, 176, 1)', name: 'Sit-ups' },
-  'squats': { Icon: FaDumbbell, color: 'rgba(33, 150, 243, 1)', name: 'Squats' },
+  'squats': { Icon: FaFistRaised, color: 'rgba(33, 150, 243, 1)', name: 'Squats' },
   'plank': { Icon: FaHeart, color: 'rgba(233, 30, 99, 1)', name: 'Plank' },
   'other': { Icon: FaStar, color: 'rgba(158, 158, 158, 1)', name: 'Other' }
+}
+
+//helper function to format meters (divide by 100 for display)
+const formatMeters = (meters) => {
+  if (!meters || meters === 0) return 0
+  return Math.round(meters / 100)
 }
 
 const Metrics = () => {
@@ -171,17 +177,6 @@ const Metrics = () => {
     return { activities, units: activitiesMap }
   }, [filteredUserChallenges])
 
-  //helper function to convert meters to kilometers
-  const convertToKilometers = (meters) => {
-    if (!meters || meters === 0) return 0
-    const km = meters / 1000
-    //if less than 1 but greater than 0 make it 1 
-    if (km > 0 && km < 1) {
-      return 1
-    }
-    return Math.ceil(km)
-  }
-
   //initialize selected activities to all if empty
   useEffect(() => {
     if (allActivities.activities.length > 0 && selectedActivities.length === 0) {
@@ -241,9 +236,9 @@ const Metrics = () => {
           const unit = allActivities.units.get(activityName) || 'times'
           let currentProgress = ap.progress || 0
           
-          //convert meters to kilometers if needed
+          //format meters (divide by 100 for display as 100m units)
           if (unit === 'meters') {
-            currentProgress = convertToKilometers(currentProgress)
+            currentProgress = formatMeters(currentProgress)
           }
           
           //sum progress for that day accumulate from all 
@@ -314,7 +309,12 @@ const Metrics = () => {
           totals[activityName] = 0
         }
         
-        totals[activityName] += ap.progress || 0
+        const unit = allActivities.units.get(activityName) || 'times'
+        let progressValue = ap.progress || 0
+        if (unit === 'meters') {
+          progressValue = formatMeters(progressValue)
+        }
+        totals[activityName] += progressValue
       })
     })
     
@@ -345,7 +345,7 @@ const Metrics = () => {
         borderWidth: 2
       }]
     }
-  }, [filteredUserChallenges])
+  }, [filteredUserChallenges, allActivities])
 
   const toggleActivity = (activity) => {
     if (selectedActivities.includes(activity)) {
@@ -457,7 +457,7 @@ const Metrics = () => {
             />
           </div>
           {lineChartData.hasMetersActivity && (
-            <p className={styles.chartDisclaimer}>DISTANCES SHOWN IN KM</p>
+            <p className={styles.chartDisclaimer}>DISTANCES SHOWN IN 100M UNITS</p>
           )}
         </div>
       ) : (

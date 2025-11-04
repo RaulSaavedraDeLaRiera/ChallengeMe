@@ -34,7 +34,7 @@ router.get('/', getAllPosts);
  *       200:
  *         description: Feed posts
  */
-router.get('/feed', getFeed);
+router.get('/feed', authMiddleware, getFeed);
 
 /**
  * @swagger
