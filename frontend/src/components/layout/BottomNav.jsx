@@ -10,7 +10,7 @@ const BottomNav = () => {
 
   return (
     <nav className={styles.bottomNav}>
-      <Link to="/discover" className={styles.navItem}>
+      <Link to="/discover" className={styles.navItem}> 
         <FaSearch className={`${styles.navIcon} ${isActive('/discover') ? styles.active : ''}`} />
         <span className={`${styles.navLabel} ${isActive('/discover') ? styles.active : ''}`}>
           Discover

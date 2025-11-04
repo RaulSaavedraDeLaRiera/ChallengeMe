@@ -335,7 +335,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 6px; /* un poco más abajo del porcentaje */
+  margin-top: 6px;
 }
 
 .abandonButtonSmall:hover {
@@ -345,6 +345,33 @@
 }
 
 .abandonIconSmall {
+  font-size: 12px;
+}
+
+/* Small complete button next to progress */
+.completeButtonSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.completeButtonSmall:hover {
+  border-color: var(--accent-primary);
+  background-color: var(--accent-primary);
+  color: var(--white);
+}
+
+.completeIconSmall {
   font-size: 12px;
 }
 
@@ -428,6 +455,16 @@
 .confirmButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.completeConfirmButton {
+  background-color: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+.completeConfirmButton:hover {
+  background-color: var(--accent-secondary) !important;
+  border-color: var(--accent-secondary) !important;
 }
 
 /* Responsive */

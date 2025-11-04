@@ -26,4 +26,25 @@ const getUserById = async (req, res) => {
   }
 };
 
-module.exports = { getMe, getUserById };
+//search users by name or emai l
+const searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.trim().length === 0) {
+      return res.json([]);
+    }
+    
+    const users = await User.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } }
+      ]
+    }).select('-password').limit(20);
+    
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { getMe, getUserById, searchUsers };

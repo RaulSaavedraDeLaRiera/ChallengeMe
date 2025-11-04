@@ -5,6 +5,9 @@ export const UserChallengeService = {
   //get users active challenges with progress (for dashboard)
   mine: (token) => http('/api/user-challenges/my-challenges', { method: 'GET', token }),
 
+  //get all user challenges for profile
+  all: (token) => http('/api/user-challenges/all-challenges', { method: 'GET', token }),
+
   //join a challenge (creates UserChallenge record)
   join: (challengeId, token) => http(`/api/user-challenges/${challengeId}/join`, { method: 'POST', token }),
 

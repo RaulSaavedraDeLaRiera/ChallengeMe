@@ -4,6 +4,7 @@ const router = express.Router();
 const authMiddleware = require('../middlewares/auth.middleware');
 const {
   getUserChallenges,
+  getAllUserChallenges,
   joinChallenge,
   getChallengeProgress,
   updateActivityProgress,
@@ -14,10 +15,13 @@ const {
 //get users active challenges with progress (for dashboard)
 router.get('/my-challenges', authMiddleware, getUserChallenges);
 
+//get all user challengesfor profile stats
+router.get('/all-challenges', authMiddleware, getAllUserChallenges);
+
 //get participants count for a challenge
 router.get('/:challengeId/participants-count', getChallengeParticipantsCount);
 
-//join a challenge (create UserChallenge record)
+//join a challenge (creating UserChallenge record) 
 router.post('/:challengeId/join', authMiddleware, joinChallenge);
 
 //get progress for a specific challenge

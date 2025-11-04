@@ -43,7 +43,7 @@
 
 .filterTab.active {
   color: var(--accent-primary);
-  border-bottom-color: #007acc;
+  border-bottom-color: var(--accent-primary);
 }
 
 .searchContainer {
@@ -63,7 +63,7 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: var(--accent-primary);
 }
 
 .searchInput::placeholder {
@@ -112,6 +112,53 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 20px;
+}
+
+/*user search results*/
+.usersList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.userCard:hover {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.userCardAvatar {
+  font-size: 40px;
+  color: var(--accent-primary);
+}
+
+.userCardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.userCardName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.userCardEmail {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 /*responsive*/

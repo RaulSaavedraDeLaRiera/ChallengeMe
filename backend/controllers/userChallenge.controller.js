@@ -21,6 +21,23 @@ const getUserChallenges = async (req, res) => {
   }
 };
 
+//get all user challenge
+const getAllUserChallenges = async (req, res) => {
+  try {
+    const userChallenges = await UserChallenge.find({ 
+      user: req.userId
+    })
+      .populate('challenge', 'title description activities startDate endDate creator participants')
+      .populate('challenge.creator', 'name email')
+      .sort({ joinedAt: -1 });
+    
+    res.json(userChallenges);
+  } catch (error) {
+    console.error('getAllUserChallenges error:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 const joinChallenge = async (req, res) => {
   try {
     const { challengeId } = req.params;
@@ -35,7 +52,7 @@ const joinChallenge = async (req, res) => {
       challenge: challengeId
     });
     
-    //if exists and is active, return it
+    //if exists and is active return it
     if (existingUserChallenge && existingUserChallenge.status === 'active') {
       await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator')
       await existingUserChallenge.populate('challenge.creator', 'name email')
@@ -47,7 +64,7 @@ const joinChallenge = async (req, res) => {
       });
     }
     
-    //if exists but was abandoned, reactivate it
+    //if exists but was abandoned reactivate
     if (existingUserChallenge && existingUserChallenge.status === 'abandoned') {
       //reset progress to 0
       const activitiesProgress = challenge.activities.map(activity => ({
@@ -219,7 +236,7 @@ const updateChallengeStatus = async (req, res) => {
     
     await userChallenge.save();
     
-    //if abandoning, remove user from challenge participants
+    //if abandoning remove user from challenge participants
     if (status === 'abandoned') {
       const challenge = await Challenge.findById(challengeId);
       if (challenge && challenge.participants) {
@@ -253,11 +270,12 @@ const getChallengeParticipantsCount = async (req, res) => {
   }
 };
 
-module.exports = { 
-  getUserChallenges, 
-  joinChallenge, 
-  getChallengeProgress, 
-  updateActivityProgress, 
+module.exports = {
+  getUserChallenges,
+  getAllUserChallenges,
+  joinChallenge,
+  getChallengeProgress,
+  updateActivityProgress,
   updateChallengeStatus,
   getChallengeParticipantsCount
-};
+}; 

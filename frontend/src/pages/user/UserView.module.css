@@ -1,5 +1,5 @@
-/*content subpage styles*/
-.contentContainer {
+/*user view page styles*/
+.userViewContainer {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,35 +11,98 @@
   z-index: 1000;
 }
 
-.closeButton {
+.backButton {
   position: fixed;
-  bottom: 100px;
+  bottom: 85px;
   right: 16px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
   background-color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
   color: var(--white);
-  border: none;
   font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px var(--shadow-accent-strong);
+  z-index: 1001;
   transition: all 0.2s ease;
-  z-index: 2000;
+  box-shadow: 0 4px 12px var(--shadow-accent-strong);
 }
 
-.closeButton:hover {
+.backButton:hover {
   background-color: var(--accent-secondary);
   transform: scale(1.05);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px; 
+  margin-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.avatar {
+  font-size: 64px;
+  color: var(--accent-primary);
+}
+
+.userDetails {
+  flex: 1;
+}
+
+.username {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.userEmail {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.followButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: var(--accent-primary);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.followButton:hover:not(:disabled) {
+  background-color: var(--accent-secondary);
+}
+
+.followButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .content {
   max-width: 800px;
   margin: 0 auto;
-  padding-bottom: 80px;
 }
 
 .filterTabs {
@@ -82,6 +145,14 @@
   font-size: 16px;
 }
 
+.postsList,
+.challengesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .emptyState {
   text-align: center;
   padding: 80px 20px;
@@ -101,9 +172,23 @@
   font-size: 1rem;
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
+/*responsive*/
+@media (max-width: 768px) {
+  .userViewContainer {
+    padding: 12px;
+  }
+  
+  .username {
+    font-size: 1.3rem;
+  }
+  
+  .avatar {
+    font-size: 48px;
+  }
+  
+  .followButton {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
 }
+

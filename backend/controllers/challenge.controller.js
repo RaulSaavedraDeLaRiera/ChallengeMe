@@ -1,9 +1,13 @@
 //challenge management: create, join, list challenges
 const Challenge = require('../models/Challenge.model');
+const UserChallenge = require('../models/UserChallenge.model');
 
 const getAllChallenges = async (req, res) => {
   try {
-    const challenges = await Challenge.find()
+    const { creator } = req.query;
+    const query = creator ? { creator } : {};
+    
+    const challenges = await Challenge.find(query)
       .populate('creator', 'name email')
       .populate('participants', 'name')
       .sort({ createdAt: -1 });
@@ -35,7 +39,34 @@ const createChallenge = async (req, res) => {
       ...req.body,
       creator: req.userId
     });
+    // creator is participant
+    if (!Array.isArray(challenge.participants)) challenge.participants = []
+    if (!challenge.participants.find((p) => p?.toString() === req.userId?.toString())) {
+      challenge.participants.push(req.userId)
+    }
     await challenge.save();
+    
+    //create user challenge for creator so it appears in your page
+    try {
+      const activitiesProgress = challenge.activities.map(activity => ({
+        activityId: activity.name,
+        progress: 0,
+        lastUpdated: new Date()
+      }));
+      
+      const userChallenge = new UserChallenge({
+        user: req.userId,
+        challenge: challenge._id,
+        activitiesProgress,
+        status: 'active',
+        joinedAt: new Date()
+      });
+      
+      await userChallenge.save();
+      console.log(`userChallenge:create user=${req.userId} challenge=${challenge._id.toString()}`)
+    } catch (ucError) {
+      console.error(`userChallenge:create error=${ucError.message}`)
+    }
     
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name');
@@ -95,7 +126,7 @@ const getMyChallenges = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
+ 
 module.exports = {
   getAllChallenges,
   getChallengeById,

@@ -9,7 +9,18 @@ import Discover from './pages/discover/Discover'
 import ProfileContacts from './pages/profile/contacts/Contacts'
 import ProfileFollowers from './pages/profile/followers/Followers'
 import ProfileContent from './pages/profile/content/Content'
+import ProfileMetrics from './pages/profile/metrics/Metrics'
+import UserView from './pages/user/UserView'
 import './App.css'
+import { Navigate, Outlet } from 'react-router-dom'
+import { authStore } from './utils/authStore'
+
+//guard for protected routes: redirects to /login when no token
+const RequireAuth = () => {
+  const token = authStore.get()
+  if (!token) return <Navigate to="/login" replace />
+  return <Outlet />
+}
 
 function App() {
   return (
@@ -17,13 +28,17 @@ function App() {
       <div className="app">
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="discover" element={<Discover />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="profile/contacts" element={<ProfileContacts />} />
-            <Route path="profile/followers" element={<ProfileFollowers />} />
-            <Route path="profile/content" element={<ProfileContent />} />
+            <Route element={<RequireAuth />}>
+              <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="discover" element={<Discover />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="profile/contacts" element={<ProfileContacts />} />
+              <Route path="profile/followers" element={<ProfileFollowers />} />
+              <Route path="profile/content" element={<ProfileContent />} />
+              <Route path="profile/metrics" element={<ProfileMetrics />} />
+              <Route path="user/:userId" element={<UserView />} />
+            </Route>
           </Route>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />

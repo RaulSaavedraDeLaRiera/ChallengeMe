@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FaRunning, FaFlagCheckered } from 'react-icons/fa'
 import { Container } from '../../../components/shared'
+import { AuthService } from '../../../services/auth.service'
+import { authStore } from '../../../utils/authStore'
+import { storage } from '../../../utils/storage'
 import styles from './Register.module.css'
 
 //register page: new user registration with slider effect and validation
@@ -55,28 +58,22 @@ const Register = () => {
 
     try {
       //call register to api
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password
-        })
+      const data = await AuthService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
       })
 
-      const data = await response.json()
+      const token = data.token ?? data?.data?.token
+      const user = data.user ?? data?.data?.user ?? data?.data
+      if (!token) throw new Error('Backend did not return token')
 
-      if (response.ok) {
-        //save token in storage
-        localStorage.setItem('token', data.token) 
-        //redirect to dashboard after registration
-        navigate('/dashboard')
-      } else {
-        setError(data.message || 'Error creating account')
-      }
+      //persist auth
+      authStore.set(token)
+      storage.set('user', user ?? null)
+
+      //redirect
+      navigate('/dashboard')
     } catch (err) {
       setError('Connection error. Please try again.')
     } finally {

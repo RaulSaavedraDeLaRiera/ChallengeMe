@@ -1,8 +1,12 @@
 /*profile page styles*/
 .profileContainer {
   padding: 16px;
+  padding-bottom: 100px;
   max-width: 800px;
   margin: 0 auto;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -28,7 +32,7 @@
 
 .avatar {
   font-size: 80px;
-  color: #007acc;
+  color: var(--accent-primary);
 }
 
 .userInfo {
@@ -38,12 +42,12 @@
 .username {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #d4d4d4;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .userEmail {
-  color: #858585;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -55,8 +59,8 @@
 }
 
 .statCard {
-  background-color: #252526;
-  border: 1px solid #3e3e42;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
   display: flex;
@@ -66,7 +70,7 @@
 
 .statIcon {
   font-size: 32px;
-  color: #007acc;
+  color: var(--accent-primary);
 }
 
 .statInfo {
@@ -77,12 +81,12 @@
 .statValue {
   font-size: 1.8rem;
   font-weight: 600;
-  color: #d4d4d4;
+  color: var(--text-primary);
 }
 
 .statLabel {
   font-size: 0.9rem;
-  color: #858585;
+  color: var(--text-muted);
 }
 
 /*quick actions*/
@@ -90,19 +94,20 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
+  flex: 1;
 }
 
 .actionButton {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background-color: #252526;
-  border: 1px solid #3e3e42;
+  gap: 14px;
+  padding: 18px 24px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: #d4d4d4;
-  font-size: 15px;
+  color: var(--text-primary);
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -111,44 +116,44 @@
 }
 
 .actionButton:hover {
-  background-color: #2d2d30;
-  border-color: #007acc;
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
 }
 
 .actionButton svg {
-  font-size: 20px;
-  color: #007acc;
+  font-size: 32px;
+  color: var(--accent-primary);
 }
 
 .actionCount {
   margin-left: auto;
-  color: #858585;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 20px;
 }
 
 /*content area*/
 .emptyState {
   text-align: center;
   padding: 60px 20px;
-  background-color: #252526;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px solid #3e3e42;
+  border: 1px solid var(--border-color);
 }
 
 .emptyIcon {
   font-size: 64px;
-  color: #3e3e42;
+  color: var(--border-color);
   margin-bottom: 16px;
 }
 
 .emptyText {
-  color: #d4d4d4;
+  color: var(--text-primary);
   font-size: 1rem;
   margin-bottom: 8px;
 }
 
 .emptySubtext {
-  color: #858585;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -165,8 +170,8 @@
 }
 
 .logoutButtonIcon:hover {
-  background-color: #2d2d30;
-  color: #f44336;
+  background-color: var(--bg-tertiary);
+  color: var(--error);
 }
 
 /*responsive*/

@@ -3,8 +3,11 @@ const Post = require('../models/Post.model');
 const Follow = require('../models/Follow.model');
 
 const getAllPosts = async (req, res) => {
-  try {
-    const posts = await Post.find()
+  try { 
+    const { author } = req.query;
+    const query = author ? { user: author } : {};
+     
+    const posts = await Post.find(query)
       .populate('user', 'name email')
       .populate('challenge', 'title')
       .populate('likes', 'name')

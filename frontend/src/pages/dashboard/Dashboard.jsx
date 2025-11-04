@@ -4,10 +4,12 @@ import styles from './Dashboard.module.css'
 import CreateModal from '../create/CreateModal'
 import { PostService } from '../../services/post.service'
 import { UserChallengeService } from '../../services/userChallenge.service'
+import { ChallengeService } from '../../services/challenge.service'
+import { FollowService } from '../../services/follow.service'
 import { authStore } from '../../utils/authStore'
-import { PostCard, UserChallengeCard } from '../../components/shared'
+import { PostCard, UserChallengeCard, ChallengeCard } from '../../components/shared'
 
-//home feed: your active challenges and posts from people you follow 
+//home feed: your active challenges and posts from people you follow  
 
 const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -15,6 +17,7 @@ const Dashboard = () => {
     return sessionStorage.getItem('challengesExpanded') !== 'false'
   })
   const [posts, setPosts] = useState([])
+  const [friendChallenges, setFriendChallenges] = useState([])
   const [myChallenges, setMyChallenges] = useState([])
   const [loadingFeed, setLoadingFeed] = useState(true)
 
@@ -27,22 +30,64 @@ const Dashboard = () => {
   useEffect(() => {
     const load = async () => {
       const token = authStore.get()
+      const currentUserId = getCurrentUserId()
+      
       try {
-        let data = []
+        //only load feed from followed users 
         if (token) {
-          try { data = await PostService.feed(token) } catch {/* ignore */}
+          try {
+            const data = await PostService.feed(token)
+            //filter out current users own posts
+            const filtered = Array.isArray(data) 
+              ? data.filter(p => {
+                  const postUserId = p.user?._id || p.user
+                  return postUserId?.toString() !== currentUserId?.toString()
+                })
+              : []
+            setPosts(filtered)
+          } catch {
+            setPosts([])
+          }
+
+          //load challenges from followed users
+          try {
+            //get list of users that current user is following
+            const following = await FollowService.getFollowing(currentUserId)
+            const followingIds = Array.isArray(following) 
+              ? following.map(f => (f._id || f.id || f)?.toString()).filter(Boolean)
+              : []
+            
+            if (followingIds.length > 0) {
+              //load all challenges and filter by followed users
+              const allChallenges = await ChallengeService.all()
+              const filtered = Array.isArray(allChallenges)
+                ? allChallenges.filter(c => {
+                    const creatorId = (c.creator?._id || c.creator)?.toString()
+                    return followingIds.includes(creatorId) && creatorId !== currentUserId?.toString()
+                  })
+                : []
+              setFriendChallenges(filtered)
+            } else {
+              setFriendChallenges([])
+            }
+          } catch {
+            setFriendChallenges([])
+          }
+        } else {
+          setPosts([])
+          setFriendChallenges([])
         }
-        if (!data || data.length === 0) {
-          data = await PostService.all()
-        }
-        setPosts(Array.isArray(data) ? data : [])
       } finally {
         setLoadingFeed(false)
       }
       try {
         if (token) {
           const m = await UserChallengeService.mine(token)
-          setMyChallenges(Array.isArray(m) ? m : [])
+          //filter out completed and abandoned challenges from dashboard
+          const filtered = Array.isArray(m) 
+            ? m.filter(uc => uc.status === 'active')
+            : []
+          setMyChallenges(filtered)
         } else {
           setMyChallenges([])
         }
@@ -62,6 +107,33 @@ const Dashboard = () => {
     } catch { /* ignore like error */}
   }
 
+  //handle join challenge from friend challenges
+  const handleJoinChallenge = async (challengeId) => {
+    const token = authStore.get()
+    if (!token) return
+    
+    try {
+      await UserChallengeService.join(challengeId, token)
+      //refresh my challenges to include the new one
+      const m = await UserChallengeService.mine(token)
+      const filtered = Array.isArray(m) 
+        ? m.filter(uc => uc.status === 'active')
+        : []
+      setMyChallenges(filtered)
+      //remove from friend challenges
+      setFriendChallenges(prev => prev.filter(c => c._id !== challengeId))
+    } catch (error) {
+      console.error('Error joining challenge:', error)
+    }
+  }
+
+  //check if challenge is joined
+  const isChallengeJoined = (challengeId) => {
+    return myChallenges.some(uc => 
+      uc && uc.challenge && uc.challenge._id === challengeId
+    )
+  }
+
   // get current user id from localStorage
   const getCurrentUserId = () => {
     try {
@@ -79,13 +151,17 @@ const Dashboard = () => {
   }
 
   //refresh challenges after progress update
-  const handleProgressUpdate = async (challengeId) => {
+  const handleProgressUpdate = async () => {
     const token = authStore.get()
     if (!token) return
     
     try {
       const m = await UserChallengeService.mine(token)
-      setMyChallenges(Array.isArray(m) ? m : [])
+      //filter out completed and abandoned challenges from dashboard
+      const filtered = Array.isArray(m) 
+        ? m.filter(uc => uc.status === 'active')
+        : []
+      setMyChallenges(filtered)
     } catch {
       //ignore error
     }
@@ -134,21 +210,44 @@ const Dashboard = () => {
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>Loading feed...</p>
             </div>
-          ) : posts.length === 0 ? (
+          ) : posts.length === 0 && friendChallenges.length === 0 ? (
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>No posts yet</p>
               <p className={styles.emptySubtext}>Follow people to see their posts and challenges</p>
             </div>
           ) : (
             <div className={styles.postsList}>
-              {posts.map((p) => (
-                <PostCard 
-                  key={p._id} 
-                  post={p} 
-                  onLike={toggleLike}
-                  currentUserId={getCurrentUserId()}
-                />
-              ))}
+              {/* Combine posts and challenges, sort by newest first */}
+              {[...posts, ...friendChallenges]
+                .sort((a, b) => {
+                  const dateA = new Date(a.createdAt || a.created_at || 0)
+                  const dateB = new Date(b.createdAt || b.created_at || 0)
+                  return dateB - dateA
+                })
+                .map((item) => {
+                  //check if its a post or challenge
+                  if (item.user || item.author) {
+                    return (
+                      <PostCard 
+                        key={item._id} 
+                        post={item} 
+                        onLike={toggleLike}
+                        currentUserId={getCurrentUserId()}
+                      />
+                    )
+                  } else {
+                    //its a challenge
+                    return (
+                      <ChallengeCard 
+                        key={item._id} 
+                        challenge={item}
+                        currentUserId={getCurrentUserId()}
+                        onJoin={handleJoinChallenge}
+                        isJoined={isChallengeJoined(item._id)}
+                      />
+                    )
+                  }
+                })}
             </div>
           )}
         </div>
@@ -168,16 +267,56 @@ const Dashboard = () => {
             //refresh feed and challenges after creation
             (async () => {
               const token = authStore.get() 
+              const currentUserId = getCurrentUserId()
+              
               try {
-                let data = []
-                if (token) { try { data = await PostService.feed(token) } catch { /* ignore feed error */ } }
-                if (!data || data.length === 0) { data = await PostService.all() }
-                setPosts(Array.isArray(data) ? data : [])
-              } catch { /* ignore refresh  */ }
+                //only load feed from followed users
+                if (token) {
+                  try {
+                    const data = await PostService.feed(token)
+                    //filter out current users own posts
+                    const filtered = Array.isArray(data) 
+                      ? data.filter(p => {
+                          const postUserId = p.user?._id || p.user
+                          return postUserId?.toString() !== currentUserId?.toString()
+                        })
+                      : []
+                    setPosts(filtered)
+                  } catch { /* ignore */ }
+
+                  //refresh challenges from followed users
+                  try {
+                    const following = await FollowService.getFollowing(currentUserId)
+                    const followingIds = Array.isArray(following) 
+                      ? following.map(f => (f._id || f.id || f)?.toString()).filter(Boolean)
+                      : []
+                    
+                    if (followingIds.length > 0) {
+                      const allChallenges = await ChallengeService.all()
+                      const filtered = Array.isArray(allChallenges)
+                        ? allChallenges.filter(c => {
+                            const creatorId = (c.creator?._id || c.creator)?.toString()
+                            return followingIds.includes(creatorId) && creatorId !== currentUserId?.toString()
+                          })
+                        : []
+                      setFriendChallenges(filtered)
+                    } else {
+                      setFriendChallenges([])
+                    }
+                  } catch { /* ignore */ }
+                } else {
+                  setPosts([])
+                  setFriendChallenges([])
+                }
+              } catch { /* ignore refresh */ }
               try {
                 if (token) {
                   const m = await UserChallengeService.mine(token)
-                  setMyChallenges(Array.isArray(m) ? m : [])
+                  //filter out completed and abandoned challenges from dashboard
+                  const filtered = Array.isArray(m) 
+                    ? m.filter(uc => uc.status === 'active')
+                    : []
+                  setMyChallenges(filtered)
                 }
               } catch { /* ignore*/ }
             })()

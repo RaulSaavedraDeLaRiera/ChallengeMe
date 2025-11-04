@@ -1,46 +1,76 @@
 import { useEffect, useState } from 'react'
-import { FaMedal, FaUsers } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
+import { FaMedal, FaUsers, FaUserCircle } from 'react-icons/fa'
 import styles from './Discover.module.css'
 import { PostService } from '../../services/post.service'
 import { authStore } from '../../utils/authStore'
 import { ChallengeService } from '../../services/challenge.service'
 import { UserChallengeService } from '../../services/userChallenge.service'
+import { UserService } from '../../services/user.service'
 import { PostCard } from '../../components/shared/PostCard/PostCard'
 import { ChallengeCard } from '../../components/shared/ChallengeCard/ChallengeCard'
 
 //discover page: find challenges, posts and people
 const Discover = () => {
-  //all, challenges, posts people
+  const navigate = useNavigate()
+  //all, challenges posts, people
   const [filter, setFilter] = useState('all') 
   const [searchQuery, setSearchQuery] = useState('')
   const [posts, setPosts] = useState([])
   const [challenges, setChallenges] = useState([])
   const [userChallenges, setUserChallenges] = useState([])
+  const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
 
-  //load followed feed first if empty, latest posts
+  //get current user id
+  const getCurrentUserId = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      return user._id || user.id
+    } catch {
+      return null
+    }
+  }
+
+  const currentUserId = getCurrentUserId()
+
+  //load all posts and challenges excluding current users content sorted by newest first
   useEffect(() => {
     const load = async () => {
+      setLoading(true)
       try {
-        const token = authStore.get()
-        let data = []
-        if (token) {
-          try {
-            data = await PostService.feed(token)
-          } catch {
-            data = []
-          }
-        }
-        if (!data || data.length === 0) {
-          data = await PostService.all()
-        }
-        setPosts(Array.isArray(data) ? data : [])
-      } finally {
-        setLoading(false)
-      }
-      try {
+        //load all posts (newest first)
+        const allPosts = await PostService.all()
+        //filter out current user's posts
+        const filteredPosts = Array.isArray(allPosts) 
+          ? allPosts.filter(p => {
+              const postUserId = p.user?._id || p.user
+              return postUserId?.toString() !== currentUserId?.toString()
+            }).sort((a, b) => {
+              //sort by newest first
+              const dateA = new Date(a.createdAt || a.created_at || 0)
+              const dateB = new Date(b.createdAt || b.created_at || 0)
+              return dateB - dateA
+            })
+          : []
+        setPosts(filteredPosts)
+        
+        //load all challenges priorize olders
         const allChallenges = await ChallengeService.all()
-        setChallenges(Array.isArray(allChallenges) ? allChallenges : [])
+        //filter out current users challenges
+        const filteredChallenges = Array.isArray(allChallenges)
+          ? allChallenges.filter(c => {
+              const challengeCreatorId = c.creator?._id || c.creator
+              return challengeCreatorId?.toString() !== currentUserId?.toString()
+            }).sort((a, b) => {
+              //sort by newest first
+              const dateA = new Date(a.createdAt || a.created_at || 0)
+              const dateB = new Date(b.createdAt || b.created_at || 0)
+              return dateB - dateA
+            })
+          : []
+        setChallenges(filteredChallenges)
         
         //load user challenges to check join status
         const token = authStore.get()
@@ -52,12 +82,42 @@ const Discover = () => {
             setUserChallenges([])
           }
         }
-      } catch {
-        setChallenges([])
+      } catch (error) {
+        console.error('Error loading discover content:', error)
+      } finally {
+        setLoading(false)
       }
     }
     load()
-  }, [])
+  }, [currentUserId])
+
+  //search users
+  useEffect(() => {
+    const search = async () => {
+      if (!searchQuery || searchQuery.trim().length === 0) {
+        setSearchResults([])
+        return
+      }
+      
+      setSearchLoading(true)
+      try {
+        const results = await UserService.search(searchQuery)
+        //filter out current user
+        const filtered = Array.isArray(results) 
+          ? results.filter(u => (u._id || u.id)?.toString() !== currentUserId?.toString())
+          : []
+        setSearchResults(filtered)
+      } catch (error) {
+        console.error('Error searching users:', error)
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }
+    
+    const timeoutId = setTimeout(search, 300)
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, currentUserId])
 
   const isChallengeJoined = (challengeId) => {
     if (!Array.isArray(userChallenges)) return false
@@ -145,14 +205,9 @@ const Discover = () => {
     } catch { /* ignore */ }
   }
 
-  //get current user id from localStorage
-  const getCurrentUserId = () => {
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      return user._id || user.id
-    } catch {
-      return null
-    }
+  //handle user click to view profile
+  const handleUserClick = (userId) => {
+    navigate(`/user/${userId}`)
   }
 
   return (
@@ -201,24 +256,90 @@ const Discover = () => {
       )}
 
       <div className={styles.discoverList}>
-        {filter === 'people' && searchQuery && (
-          <div className={styles.emptyState}>
-            <FaUsers className={styles.emptyIcon} />
-            <p className={styles.emptyText}>No results found</p>
-            <p className={styles.emptySubtext}>Try a different search term</p>
-          </div>
-        )}
-        
-        {filter === 'people' && !searchQuery && (
-          <div className={styles.emptyState}>
-            <FaUsers className={styles.emptyIcon} />
-            <p className={styles.emptyText}>Search for people</p>
-            <p className={styles.emptySubtext}>Type a name or username</p>
-          </div>
+        {filter === 'all' && (
+          <>
+            {loading ? (
+              <div className={styles.emptyState}>
+                <FaMedal className={styles.emptyIcon} />
+                <p className={styles.emptyText}>Loading...</p>
+              </div>
+            ) : posts.length === 0 && challenges.length === 0 ? (
+              <div className={styles.emptyState}>
+                <FaMedal className={styles.emptyIcon} />
+                <p className={styles.emptyText}>No content yet</p>
+              </div>
+            ) : (
+              <>
+                {posts.length > 0 && (
+                  <div className={styles.postsList}>
+                    {posts.map((p) => (
+                      <PostCard 
+                        key={p._id} 
+                        post={p} 
+                        onLike={toggleLike}
+                        currentUserId={currentUserId}
+                      />
+                    ))}
+                  </div>
+                )}
+                {challenges.length > 0 && (
+                  <div className={styles.challengesList} style={{ marginTop: posts.length > 0 ? 16 : 0 }}>
+                    {challenges.map((challenge) => (
+                      <ChallengeCard 
+                        key={challenge._id} 
+                        challenge={challenge}
+                        currentUserId={currentUserId}
+                        onJoin={handleJoinChallenge}
+                        isJoined={isChallengeJoined(challenge._id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
 
-        {filter !== 'people' && (
-          <div>
+        {filter === 'people' && (
+          <>
+            {searchLoading ? (
+              <div className={styles.emptyState}>
+                <p className={styles.emptyText}>Searching...</p>
+              </div>
+            ) : !searchQuery ? (
+              <div className={styles.emptyState}>
+                <FaUsers className={styles.emptyIcon} />
+                <p className={styles.emptyText}>Search for people</p>
+                <p className={styles.emptySubtext}>Type a name or username</p>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className={styles.emptyState}>
+                <FaUsers className={styles.emptyIcon} />
+                <p className={styles.emptyText}>No results found</p>
+                <p className={styles.emptySubtext}>Try a different search term</p>
+              </div>
+            ) : (
+              <div className={styles.usersList}>
+                {searchResults.map((user) => (
+                  <div 
+                    key={user._id || user.id} 
+                    className={styles.userCard}
+                    onClick={() => handleUserClick(user._id || user.id)}
+                  >
+                    <FaUserCircle className={styles.userCardAvatar} />
+                    <div className={styles.userCardInfo}>
+                      <span className={styles.userCardName}>{user.name || 'User'}</span>
+                      <span className={styles.userCardEmail}>{user.email || ''}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {filter === 'posts' && (
+          <>
             {loading ? (
               <div className={styles.emptyState}>
                 <FaMedal className={styles.emptyIcon} />
@@ -227,8 +348,7 @@ const Discover = () => {
             ) : posts.length === 0 ? (
               <div className={styles.emptyState}>
                 <FaMedal className={styles.emptyIcon} />
-                <p className={styles.emptyText}>No content yet</p>
-                <p className={styles.emptySubtext}>Follow people to see their content</p>
+                <p className={styles.emptyText}>No posts yet</p>
               </div>
             ) : (
               <div className={styles.postsList}>
@@ -237,18 +357,22 @@ const Discover = () => {
                     key={p._id} 
                     post={p} 
                     onLike={toggleLike}
-                    currentUserId={getCurrentUserId()}
+                    currentUserId={currentUserId}
                   />
                 ))}
               </div>
             )}
-          </div>
+          </>
         )}
 
-        {filter !== 'people' && (
-          <div style={{ marginTop: 16 }}>
-            <h2 className={styles.sectionTitle}>Challenges</h2>
-            {challenges.length === 0 ? (
+        {filter === 'challenges' && (
+          <>
+            {loading ? (
+              <div className={styles.emptyState}>
+                <FaMedal className={styles.emptyIcon} />
+                <p className={styles.emptyText}>Loading...</p>
+              </div>
+            ) : challenges.length === 0 ? (
               <div className={styles.emptyState}>
                 <FaMedal className={styles.emptyIcon} />
                 <p className={styles.emptyText}>No challenges yet</p>
@@ -256,17 +380,17 @@ const Discover = () => {
             ) : (
               <div className={styles.challengesList}>
                 {challenges.map((challenge) => (
-                    <ChallengeCard 
-                      key={challenge._id} 
-                      challenge={challenge}
-                      currentUserId={getCurrentUserId()}
-                      onJoin={handleJoinChallenge}
-                      isJoined={isChallengeJoined(challenge._id)}
-                    />
-                  ))}
+                  <ChallengeCard 
+                    key={challenge._id} 
+                    challenge={challenge}
+                    currentUserId={currentUserId}
+                    onJoin={handleJoinChallenge}
+                    isJoined={isChallengeJoined(challenge._id)}
+                  />
+                ))}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div> 

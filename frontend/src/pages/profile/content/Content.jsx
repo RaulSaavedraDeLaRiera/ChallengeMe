@@ -1,14 +1,46 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaCamera, FaRunning, FaTimes } from 'react-icons/fa'
 import styles from './Content.module.css'
+import { PostService } from '../../../services/post.service'
+import { ChallengeService } from '../../../services/challenge.service'
+import { PostCard } from '../../../components/shared/PostCard/PostCard'
+import { ChallengeCard } from '../../../components/shared/ChallengeCard/ChallengeCard'
+import { authStore } from '../../../utils/authStore'
 
 //content subpage: users posts and challenges with categories
 const Content = () => {
   const navigate = useNavigate()
   //all, posts, challenges 
 
-  const [contentFilter, setContentFilter] = useState('all') 
+  const [contentFilter, setContentFilter] = useState('all')
+  const [posts, setPosts] = useState([])
+  const [challenges, setChallenges] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const me = JSON.parse(localStorage.getItem('user') || '{}')
+        const myId = me._id || me.id
+        if (!myId) {
+          setPosts([]); setChallenges([]); setLoading(false); return
+        }
+        const [myPosts, myChallenges] = await Promise.all([
+          PostService.all().then(arr => Array.isArray(arr) ? arr.filter(p => (p.user?._id || p.user)?.toString() === myId.toString()) : []),
+          ChallengeService.all().then(arr => Array.isArray(arr) ? arr.filter(c => (c.creator?._id || c.creator)?.toString() === myId.toString()) : [])
+        ])
+        setPosts(myPosts)
+        setChallenges(myChallenges)
+      } catch {
+        setPosts([]); setChallenges([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
   return (
     <div className={styles.contentContainer}>
       <button className={styles.closeButton} onClick={() => navigate('/profile')}>
@@ -39,10 +71,39 @@ const Content = () => {
           </button>
         </div>
 
-        <div className={styles.emptyState}>
-          <p className={styles.emptyText}>No content yet</p>
-          <p className={styles.emptySubtext}>Start creating posts or challenges</p>
-        </div>
+        {loading ? (
+          <div className={styles.emptyState}>
+            <p className={styles.emptyText}>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {(contentFilter === 'all' || contentFilter === 'posts') && (
+              posts.length === 0 ? (
+                <div className={styles.emptyState}><p className={styles.emptyText}>No posts yet</p></div>
+              ) : (
+                <div className={styles.list}>
+                  {posts.map(p => (
+                    <PostCard key={p._id} post={p} currentUserId={(JSON.parse(localStorage.getItem('user')||'{}')._id)} onLike={async (id)=>{
+                      const token = authStore.get(); if(!token) return; try{ const upd=await PostService.like(id, token); setPosts(prev=>prev.map(x=>x._id===upd._id?upd:x)) }catch{}
+                    }} />
+                  ))}
+                </div>
+              )
+            )}
+
+            {(contentFilter === 'all' || contentFilter === 'challenges') && (
+              challenges.length === 0 ? (
+                <div className={styles.emptyState}><p className={styles.emptyText}>No challenges yet</p></div>
+              ) : (
+                <div className={styles.list}>
+                  {challenges.map(c => (
+                    <ChallengeCard key={c._id} challenge={c} currentUserId={(JSON.parse(localStorage.getItem('user')||'{}')._id)} onJoin={()=>{}} isJoined={true} />
+                  ))}
+                </div>
+              )
+            )}
+          </>
+        )}
       </div>
     </div>
   )

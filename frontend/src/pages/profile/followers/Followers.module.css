@@ -5,8 +5,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #1e1e1e;
+  background-color: var(--bg-primary);
   padding: 16px;
+  overflow-y: auto;
   z-index: 1000;
 }
 
@@ -17,21 +18,21 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #007acc;
-  color: white;
+  background-color: var(--accent-primary);
+  color: var(--white);
   border: none;
   font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+  box-shadow: 0 4px 12px var(--shadow-accent-strong);
   transition: all 0.2s ease;
   z-index: 2000;
 }
 
 .closeButton:hover {
-  background-color: #0e639c;
+  background-color: var(--accent-secondary);
   transform: scale(1.05);
 }
 
@@ -44,25 +45,72 @@
 .emptyState {
   text-align: center;
   padding: 80px 20px;
-  background-color: #252526;
+  background-color: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid #3e3e42;
+  border: 1px solid var(--border-color);
   margin-top: 60px;
 }
 
 .emptyIcon {
   font-size: 80px;
-  color: #3e3e42;
+  color: var(--border-color);
   margin-bottom: 20px;
 }
 
 .emptyText {
   font-size: 1.3rem;
-  color: #d4d4d4;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .emptySubtext {
-  color: #858585;
+  color: var(--text-muted);
   font-size: 1rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.item:hover {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.itemAvatar {
+  font-size: 40px;
+  color: var(--accent-primary);
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.itemName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.itemEmail {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
