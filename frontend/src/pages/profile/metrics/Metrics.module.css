@@ -1,0 +1,178 @@
+.metricsContainer {
+  padding: 16px;
+  padding-bottom: 120px;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.timeFilter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 85px;
+  background-color: var(--bg-primary);
+  z-index: 10;
+}
+
+.timeButton {
+  flex: 1;
+  padding: 10px 16px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeButton:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+.timeButton.active {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.chartContainer {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color); 
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chartDisclaimer {
+  font-size: 10px;
+  color: white;
+  text-align: center;
+  margin-top: 8px;
+  margin-bottom: 0;
+  opacity: 0.7;
+}
+
+.chartContainerSmall {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.chartTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.lineChartWrapper {
+  height: 250px;
+  position: relative;
+}
+
+.pieChartWrapper {
+  height: 200px;
+  position: relative;
+}
+
+.activityFilters {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 24px;
+}
+
+.filtersList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.filterButton {
+  padding: 8px 10px;
+  background-color: transparent;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.filterButton:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.filterButton.active {
+  border-width: 3px;
+}
+
+.filterButton.activeAll {
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.filterIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.loadingState,
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.loadingState p,
+.emptyState p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .metricsContainer {
+    padding: 12px;
+    padding-bottom: 120px;
+  }
+
+  .lineChartWrapper,
+  .doughnutChartWrapper {
+    height: 250px;
+  }
+
+  .timeFilter {
+    bottom: 80px;
+    padding: 12px 0;
+  }
+}
+

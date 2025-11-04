@@ -20,6 +20,15 @@ const Profile = () => {
   const [completedCount, setCompletedCount] = useState(0)
 
   //load current user and counts
+  useEffect(() => {
+    const load = async () => {
+      const token = authStore.get()
+      if (!token) return
+      try {
+        const user = await AuthService.profile(token)
+        setMe(user)
+        //mirror in localStorage
+        try { localStorage.setItem('user', JSON.stringify(user)) } catch {}
         
         const myId = user._id || user.id
         if (!myId) return
