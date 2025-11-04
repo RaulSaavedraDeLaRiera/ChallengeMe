@@ -17,7 +17,9 @@ const parse = async (res) => {
 //reusable Api request service
 export const http = async (path, { method='GET', body, token, headers }) => {
   //configure the request
-  const res = await fetch(`http://localhost:3001${path}`,{
+  //API_URL exists use it, if not use relative path 
+  const apiUrl = import.meta.env.VITE_API_URL || ''
+  const res = await fetch(`${apiUrl}${path}`,{
     method,
     headers: {
       'Content-Type': 'application/json',
