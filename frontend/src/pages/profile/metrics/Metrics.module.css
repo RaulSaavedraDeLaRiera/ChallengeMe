@@ -13,8 +13,9 @@
   margin-bottom: 24px;
 }
 
-.timeFilter {
+.selectionHeader {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 24px;
   padding-bottom: 16px;
@@ -25,9 +26,17 @@
   z-index: 10;
 }
 
-.timeButton {
-  flex: 1;
-  padding: 10px 16px;
+.challengeFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.challengeButton {
+  padding: 10px 14px;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -36,22 +45,32 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  max-width: 220px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.timeButton:hover {
+.challengeButton:hover {
   background-color: var(--bg-tertiary);
   border-color: var(--accent-primary);
 }
 
-.timeButton.active {
+.challengeButtonActive {
   background-color: var(--accent-primary);
   border-color: var(--accent-primary);
   color: white;
 }
 
+.selectionHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 .chartContainer {
   background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color); 
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
@@ -74,6 +93,14 @@
   margin-bottom: 24px;
 }
 
+.sectionDivider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--border-color);
+  margin: 20px 0;
+  opacity: 0.6;
+}
+
 .chartTitle {
   font-size: 0.9rem;
   font-weight: 600;
@@ -82,8 +109,8 @@
   text-align: center;
 }
 
-.lineChartWrapper {
-  height: 250px;
+.barChartWrapper {
+  height: 260px;
   position: relative;
 }
 
@@ -165,12 +192,12 @@
     padding-bottom: 120px;
   }
 
-  .lineChartWrapper,
-  .doughnutChartWrapper {
-    height: 250px;
+  .barChartWrapper,
+  .pieChartWrapper {
+    height: 240px;
   }
 
-  .timeFilter {
+  .selectionHeader {
     bottom: 80px;
     padding: 12px 0;
   }

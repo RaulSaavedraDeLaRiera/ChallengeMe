@@ -10,6 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+//health check root route
+app.get('/', (req, res) => {
+  res.json({ message: 'ChallengeMe API running', docs: '/api-docs' });
+});
+
 //swagger documentation
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger');

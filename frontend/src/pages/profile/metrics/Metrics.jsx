@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Line, Pie } from 'react-chartjs-2'
+import { Bar as BarChart, Pie as PieChart } from 'react-chartjs-2'
+
+void BarChart
+void PieChart
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   ArcElement,
   Title,
   Tooltip,
@@ -16,19 +18,16 @@ import { UserChallengeService } from '../../../services/userChallenge.service'
 import { authStore } from '../../../utils/authStore'
 import styles from './Metrics.module.css'
 
-//register chart components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   ArcElement,
   Title,
   Tooltip,
   Legend
 )
 
-//activity mapping: icon component, color
 const ACTIVITY_CONFIG = {
   'run': { Icon: FaRunning, color: 'rgba(0, 171, 169, 1)', name: 'Run' },
   'bike': { Icon: FaBicycle, color: 'rgba(255, 87, 34, 1)', name: 'Bike' },
@@ -40,26 +39,148 @@ const ACTIVITY_CONFIG = {
   'other': { Icon: FaStar, color: 'rgba(158, 158, 158, 1)', name: 'Other' }
 }
 
-//helper function to format meters (divide by 100 for display)
-const formatMeters = (meters) => {
-  if (!meters || meters === 0) return 0
-  return Math.round(meters / 100)
+const ACTIVITY_BASE_RULES = {
+  'run': { divisor: 300, note: 'Run = 300m', outputUnit: 'meters', outputLabel: 'km' },
+  'walk': { divisor: 600, note: 'Walk = 600m', outputUnit: 'meters', outputLabel: 'km' },
+  'bike': { divisor: 1000, note: 'Bike = 1km', outputUnit: 'meters', outputLabel: 'km' },
+  'push-ups': { divisor: 10, note: 'Push-ups = 10 reps', outputUnit: 'times', outputLabel: 'reps' },
+  'sit-ups': { divisor: 15, note: 'Sit-ups = 15 reps', outputUnit: 'times', outputLabel: 'reps' },
+  'squats': { divisor: 20, note: 'Squats = 20 reps', outputUnit: 'times', outputLabel: 'reps' },
+  'plank': { divisor: 1, note: 'Plank = 1min', outputUnit: 'minutes', outputLabel: 'min' },
+  'other': { divisor: 1, note: '', outputUnit: '', outputLabel: '' }
+}
+
+const pieValuePlugin = {
+  id: 'pieValuePlugin',
+  afterDatasetsDraw(chart, args, opts) {
+    const options = opts || {}
+    const getText = typeof options.getText === 'function' ? options.getText : null
+    const getPercentage = typeof options.getPercentage === 'function' ? options.getPercentage : null
+    const minPercentage = typeof options.minPercentage === 'number' ? options.minPercentage : 5
+
+    if (!getText) {
+      return
+    }
+
+    const { ctx } = chart
+    const meta = chart.getDatasetMeta(0)
+
+    meta.data.forEach((element, index) => {
+      const label = getText(index)
+      if (!label) {
+        return
+      }
+
+      const percentage = getPercentage ? getPercentage(index) : 100
+      if (percentage < minPercentage) {
+        return
+      }
+
+      const { x, y } = element.tooltipPosition()
+      ctx.save()
+      ctx.font = '600 11px sans-serif'
+      ctx.fillStyle = '#ffffff'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+      ctx.shadowBlur = 2
+      ctx.fillText(label, x, y)
+      ctx.restore()
+    })
+  }
+}
+
+const normalizeProgress = (activityName, unit, value) => {
+  const amount = Number(value) || 0
+  if (amount <= 0) {
+    return 0
+  }
+
+  const config = ACTIVITY_BASE_RULES[activityName] || ACTIVITY_BASE_RULES['other']
+  const divisor = config.divisor || 1
+
+  if (unit === 'meters' || unit === 'times' || unit === 'minutes') {
+    return Math.max(1, Math.ceil(amount / divisor))
+  }
+
+  return Math.max(1, Math.ceil(amount))
+}
+
+const formatKilometers = (meters) => {
+  const km = (Number(meters) || 0) / 1000
+  if (km === 0) {
+    return '0km'
+  }
+
+  if (km >= 100) {
+    return `${Math.round(km)}km`
+  }
+
+  if (km >= 10) {
+    return `${km.toFixed(1).replace(/\.0$/, '')}km`
+  }
+
+  return `${parseFloat(km.toFixed(2)).toString()}km`
+}
+
+const formatCount = (value, suffix) => {
+  const amount = Number(value) || 0
+  return `${amount}${suffix}`
+}
+
+const formatMinutes = (value) => {
+  const amount = Number(value) || 0
+  return `${parseFloat(amount.toFixed(2)).toString()}min`
+}
+
+const formatActivityTotal = (activityName, unit, rawValue) => {
+  const config = ACTIVITY_BASE_RULES[activityName] || ACTIVITY_BASE_RULES['other']
+
+  if (unit === 'meters' || config.outputUnit === 'meters') {
+    return formatKilometers(rawValue)
+  }
+
+  if (unit === 'minutes' || config.outputUnit === 'minutes') {
+    return formatMinutes(rawValue)
+  }
+
+  const suffix = config.outputLabel || unit || ''
+  const normalizedSuffix = suffix ? ` ${suffix}` : ''
+  return formatCount(rawValue, normalizedSuffix)
+}
+
+const cleanTitle = (value) => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return 'Challenge'
+  }
+  return value.trim()
+}
+
+const arraysEqual = (a, b) => {
+  if (a === b) return true
+  if (!Array.isArray(a) || !Array.isArray(b)) return false
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }
 
 const Metrics = () => {
   const [userChallenges, setUserChallenges] = useState([])
   const [loading, setLoading] = useState(true)
-  const [timeFilter, setTimeFilter] = useState('week') // week, month, total
+  const [selectedChallengeIds, setSelectedChallengeIds] = useState([])
   const [selectedActivities, setSelectedActivities] = useState([])
 
-  //load all user challenges
   useEffect(() => {
     const load = async () => {
       const token = authStore.get()
       if (!token) {
+        setUserChallenges([])
+        setLoading(false)
         return
       }
-      
+
       setLoading(true)
       try {
         const allUC = await UserChallengeService.all(token)
@@ -70,272 +191,222 @@ const Metrics = () => {
         setLoading(false)
       }
     }
+
     load()
   }, [])
 
-  //find join date
-  const earliestJoinDate = useMemo(() => {
-    if (!Array.isArray(userChallenges) || userChallenges.length === 0) {
-      return null
-    }
-    
-    const dates = userChallenges
-      .map(uc => new Date(uc.joinedAt || uc.createdAt || uc.created_at || new Date()))
-      .filter(d => !isNaN(d.getTime()))
-    
-    if (dates.length === 0) return null
-    
-    const earliest = new Date(Math.min(...dates.map(d => d.getTime())))
-    return earliest
-  }, [userChallenges])
-
-  //calculate date range 
-  const dateRange = useMemo(() => {
-    const today = new Date()
-    today.setHours(23, 59, 59, 999)
-    
-    let startDate
-    
-    if (!earliestJoinDate) {
-      startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000) // default to week
-    } else {
-      const earliest = new Date(earliestJoinDate)
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
-      
-      switch (timeFilter) {
-        case 'week': {
-          const weekAgo = new Date(today)
-          weekAgo.setDate(weekAgo.getDate() - 7)
-          startDate = earliest > weekAgo ? earliest : weekAgo
-          //if joined today is use yesterday
-          if (earliest.toDateString() === today.toDateString()) {
-            startDate = yesterday
-          }
-          break
-        }
-        case 'month': {
-          const monthAgo = new Date(today)
-          monthAgo.setDate(monthAgo.getDate() - 30)
-          startDate = earliest > monthAgo ? earliest : monthAgo
-          //if joined today is use yesterday
-          if (earliest.toDateString() === today.toDateString()) {
-            startDate = yesterday
-          }
-          break
-        }
-        case 'total': {
-          startDate = earliest
-          //if joined today is use yesterday
-          if (earliest.toDateString() === today.toDateString()) {
-            startDate = yesterday
-          }
-          break
-        }
-        default:
-          startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-      }
-    }
-    
-    return { startDate, endDate: today }
-  }, [earliestJoinDate, timeFilter])
-
-  //filter user challenges with range
-  const filteredUserChallenges = useMemo(() => {
-    if (!Array.isArray(userChallenges)) {
-      return []
-    }
-    
-    const { startDate, endDate } = dateRange
-    
-    const filtered = userChallenges.filter(uc => {
-      const updateDate = new Date(uc.updatedAt || uc.updated_at || uc.completedAt || uc.joinedAt || uc.createdAt || new Date())
-      return updateDate >= startDate && updateDate <= endDate
-    })
-    
-    return filtered
-  }, [userChallenges, dateRange])
-
-  //extract all the names of the activities and their type
   const allActivities = useMemo(() => {
     const activitiesMap = new Map()
-    
-    filteredUserChallenges.forEach(uc => {
-      if (uc.challenge?.activities && Array.isArray(uc.challenge.activities)) {
-        uc.challenge.activities.forEach(activity => {
-          if (activity.name) {
-            const name = activity.name.toLowerCase()
-            if (!activitiesMap.has(name)) {
-              activitiesMap.set(name, activity.unit || 'times')
+
+    if (Array.isArray(userChallenges)) {
+      userChallenges.forEach(uc => {
+        if (uc.challenge?.activities && Array.isArray(uc.challenge.activities)) {
+          uc.challenge.activities.forEach(activity => {
+            if (activity?.name) {
+              const name = activity.name.toLowerCase()
+              if (!activitiesMap.has(name)) {
+                activitiesMap.set(name, activity.unit || 'times')
+              }
             }
-          }
-        })
-      }
-    })
-    
+          })
+        }
+      })
+    }
+
     const activities = Array.from(activitiesMap.keys()).sort()
     return { activities, units: activitiesMap }
-  }, [filteredUserChallenges])
+  }, [userChallenges])
 
-  //initialize selected activities to all if empty
   useEffect(() => {
     if (allActivities.activities.length > 0 && selectedActivities.length === 0) {
       setSelectedActivities([...allActivities.activities])
     }
-  }, [allActivities.activities.length, selectedActivities.length])
+  }, [allActivities.activities, selectedActivities.length])
 
-  //process data for line 
-  const lineChartData = useMemo(() => {
-    if (!filteredUserChallenges.length) {
-      return { labels: [], datasets: [] }
+  useEffect(() => {
+    if (!Array.isArray(userChallenges) || userChallenges.length === 0) {
+      if (selectedChallengeIds.length > 0) {
+        setSelectedChallengeIds([])
+      }
+      return
     }
-    
-    const { startDate, endDate } = dateRange
-    
-    //generate all dates in range
-    const dates = []
-    const currentDate = new Date(startDate)
-    while (currentDate <= endDate) {
-      dates.push(new Date(currentDate))
-      currentDate.setDate(currentDate.getDate() + 1)
-    }
-    
-    //collect daily progress
-    const dailyProgress = {}
-    
-    dates.forEach(date => {
-      const dateKey = date.toISOString().split('T')[0]
-      dailyProgress[dateKey] = {}
-      allActivities.activities.forEach(activity => {
-        dailyProgress[dateKey][activity] = 0
-      })
+
+    setSelectedChallengeIds(prev => {
+      const availableIds = userChallenges.map(uc => uc._id)
+      const preserved = prev.filter(id => availableIds.includes(id))
+
+      if (preserved.length > 0) {
+        return arraysEqual(preserved, prev) ? prev : preserved
+      }
+
+      const defaults = availableIds.slice(0, 3)
+      return arraysEqual(defaults, prev) ? prev : defaults
     })
-    
-    //process each user challenge sum all progress 
-    filteredUserChallenges.forEach(uc => {
-      if (!uc.activitiesProgress || !Array.isArray(uc.activitiesProgress)) {
+  }, [userChallenges, selectedChallengeIds.length])
+
+  const selectedChallenges = useMemo(() => {
+    if (!Array.isArray(userChallenges) || userChallenges.length === 0) {
+      return []
+    }
+
+    const map = new Map(userChallenges.map(uc => [uc._id, uc]))
+    return selectedChallengeIds
+      .map(id => map.get(id))
+      .filter(Boolean)
+  }, [userChallenges, selectedChallengeIds])
+
+  const barChartData = useMemo(() => {
+    if (!selectedChallenges.length) {
+      return { labels: [], datasets: [], conversionNotes: [] }
+    }
+
+    const activityKeys = new Set()
+    const conversionNotes = new Set()
+
+    const summaries = selectedChallenges.map(uc => {
+      const totals = {}
+      const rawTotals = {}
+      const units = {}
+
+      if (Array.isArray(uc.activitiesProgress)) {
+        uc.activitiesProgress.forEach(ap => {
+          const activityName = ap.activityId?.toLowerCase()
+          if (!activityName) {
+            return
+          }
+
+          if (selectedActivities.length > 0 && !selectedActivities.includes(activityName)) {
+            return
+          }
+
+          const unit = allActivities.units.get(activityName) || 'times'
+          const normalized = normalizeProgress(activityName, unit, ap.progress || 0)
+          if (!totals[activityName]) {
+            totals[activityName] = 0
+          }
+          if (!rawTotals[activityName]) {
+            rawTotals[activityName] = 0
+          }
+
+          totals[activityName] += normalized
+          rawTotals[activityName] += Number(ap.progress) || 0
+          units[activityName] = unit
+          activityKeys.add(activityName)
+
+          const baseRule = ACTIVITY_BASE_RULES[activityName]
+          if (baseRule?.note) {
+            conversionNotes.add(baseRule.note)
+          }
+        })
+      }
+
+      const title = cleanTitle(uc.challenge?.title)
+      return {
+        id: uc._id,
+        label: title,
+        totals,
+        rawTotals,
+        units
+      }
+    })
+
+    const activities = Array.from(activityKeys)
+    if (!activities.length) {
+      return {
+        labels: summaries.map(summary => summary.label),
+        datasets: [],
+        conversionNotes: Array.from(conversionNotes).sort()
+      }
+    }
+
+    const datasets = activities.map(activity => {
+      const config = ACTIVITY_CONFIG[activity] || ACTIVITY_CONFIG['other']
+      return {
+        label: config.name,
+        activityKey: activity,
+        data: summaries.map(summary => summary.totals[activity] || 0),
+        backgroundColor: config.color,
+        borderColor: config.color,
+        borderWidth: 1,
+        borderRadius: 6,
+        borderSkipped: false,
+        stack: 'effort',
+        rawValues: summaries.map(summary => summary.rawTotals[activity] || 0),
+        units: summaries.map(summary => summary.units[activity] || 'times')
+      }
+    })
+
+    return {
+      labels: summaries.map(summary => summary.label),
+      datasets,
+      conversionNotes: Array.from(conversionNotes).sort()
+    }
+  }, [selectedChallenges, selectedActivities, allActivities.units])
+
+  const doughnutChartData = useMemo(() => {
+    if (!Array.isArray(userChallenges) || userChallenges.length === 0) {
+      return { labels: [], datasets: [], activityKeys: [], rawValues: [], units: [], percentages: [], inlineValues: [] }
+    }
+
+    const totals = {}
+    const rawTotals = {}
+    const unitsByActivity = {}
+
+    userChallenges.forEach(uc => {
+      if (!Array.isArray(uc.activitiesProgress)) {
         return
       }
-      
-      uc.activitiesProgress.forEach(ap => {
-        const activityName = ap.activityId?.toLowerCase()
-        if (!activityName || !allActivities.activities.includes(activityName)) {
-          return
-        }
-        
-        //only include selected activities
-        if (selectedActivities.length > 0 && !selectedActivities.includes(activityName)) {
-          return
-        }
-        
-        const updateDate = new Date(ap.lastUpdated || uc.updatedAt || uc.updated_at || new Date())
-        const dateKey = updateDate.toISOString().split('T')[0]
-        
-        if (dailyProgress[dateKey]) {
-          //get unit for this activity
-          const unit = allActivities.units.get(activityName) || 'times'
-          let currentProgress = ap.progress || 0
-          
-          //format meters (divide by 100 for display as 100m units)
-          if (unit === 'meters') {
-            currentProgress = formatMeters(currentProgress)
-          }
-          
-          //sum progress for that day accumulate from all 
-          dailyProgress[dateKey][activityName] = (dailyProgress[dateKey][activityName] || 0) + currentProgress
-        }
-      })
-    })
-    
-    //check if any activity uses meters 
-    const hasMetersActivity = allActivities.activities.some(activity => {
-      const unit = allActivities.units.get(activity)
-      return unit === 'meters'
-    })
-    
-    //create dataset
-    const datasets = allActivities.activities
-      .filter(activity => selectedActivities.length === 0 || selectedActivities.includes(activity))
-      .map((activity) => {
-        const config = ACTIVITY_CONFIG[activity] || ACTIVITY_CONFIG['other']
-        const color = config.color
-        
-        //calculate cumulative progress total up to each 
-        let cumulative = 0
-        const cumulativeData = dates.map(date => {
-          const dateKey = date.toISOString().split('T')[0]
-          const dayTotal = dailyProgress[dateKey][activity] || 0
-          cumulative += dayTotal
-          return Math.max(0, Math.round(cumulative)) 
-          //ensure integer for numbers
-        })
-        
-        return {
-          label: config.name,
-          data: cumulativeData,
-          borderColor: color,
-          backgroundColor: color.replace('1)', '0.2)'),
-          tension: 0.4,
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 4
-        }
-      })
-    
-    const labels = dates.map(date => {
-      const d = new Date(date)
-      return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
-    })
-    
-    return { labels, datasets, hasMetersActivity }
-  }, [filteredUserChallenges, allActivities, selectedActivities, dateRange])
 
-  //process data for chart: total by activity
-  const doughnutChartData = useMemo(() => {
-    if (!filteredUserChallenges.length) {
-      return { labels: [], datasets: [] }
-    }
-    
-    const totals = {}
-    
-    filteredUserChallenges.forEach(uc => {
-      if (!uc.activitiesProgress || !Array.isArray(uc.activitiesProgress)) return
-      
       uc.activitiesProgress.forEach(ap => {
         const activityName = ap.activityId?.toLowerCase()
-        if (!activityName) return
-        
+        if (!activityName) {
+          return
+        }
+
         if (!totals[activityName]) {
           totals[activityName] = 0
         }
-        
-        const unit = allActivities.units.get(activityName) || 'times'
-        let progressValue = ap.progress || 0
-        if (unit === 'meters') {
-          progressValue = formatMeters(progressValue)
+        if (!rawTotals[activityName]) {
+          rawTotals[activityName] = 0
         }
+
+        const unit = allActivities.units.get(activityName) || 'times'
+        unitsByActivity[activityName] = unit
+        const progressValue = normalizeProgress(activityName, unit, ap.progress || 0)
         totals[activityName] += progressValue
+        rawTotals[activityName] += Number(ap.progress) || 0
       })
     })
-    
+
     const activities = Object.keys(totals).sort()
-    const totalSum = activities.reduce((sum, a) => sum + totals[a], 0)
-    
-    const labels = activities.map(a => {
-      const config = ACTIVITY_CONFIG[a] || ACTIVITY_CONFIG['other']
-      const percentage = totalSum > 0 ? Math.round((totals[a] / totalSum) * 100) : 0
-      return `${config.name} ${percentage}%`
+    if (!activities.length) {
+      return { labels: [], datasets: [], activityKeys: [], rawValues: [], units: [], percentages: [], inlineValues: [] }
+    }
+
+    const totalSum = activities.reduce((sum, key) => sum + totals[key], 0)
+    const percentages = activities.map(key => (totalSum > 0 ? (totals[key] / totalSum) * 100 : 0))
+
+    const labels = activities.map(key => {
+      const config = ACTIVITY_CONFIG[key] || ACTIVITY_CONFIG['other']
+      return config.name
     })
-    const data = activities.map(a => totals[a])
-    const colors = activities.map(a => {
-      const config = ACTIVITY_CONFIG[a] || ACTIVITY_CONFIG['other']
+    const data = activities.map(key => totals[key])
+    const colors = activities.map(key => {
+      const config = ACTIVITY_CONFIG[key] || ACTIVITY_CONFIG['other']
       return config.color.replace('1)', '0.8)')
     })
-    const borderColors = activities.map(a => {
-      const config = ACTIVITY_CONFIG[a] || ACTIVITY_CONFIG['other']
+    const borderColors = activities.map(key => {
+      const config = ACTIVITY_CONFIG[key] || ACTIVITY_CONFIG['other']
       return config.color
     })
-    
+    const rawValues = activities.map(key => rawTotals[key] || 0)
+    const unitsList = activities.map(key => unitsByActivity[key] || 'times')
+    const inlineValues = activities.map((key, index) => {
+      const formatted = formatActivityTotal(key, unitsByActivity[key] || 'times', rawTotals[key] || 0)
+      const percentage = percentages[index]
+      return percentage >= 5 ? formatted : ''
+    })
+
     return {
       labels,
       datasets: [{
@@ -343,25 +414,44 @@ const Metrics = () => {
         backgroundColor: colors,
         borderColor: borderColors,
         borderWidth: 2
-      }]
+      }],
+      activityKeys: activities,
+      rawValues,
+      units: unitsList,
+      percentages,
+      inlineValues
     }
-  }, [filteredUserChallenges, allActivities])
+  }, [userChallenges, allActivities])
 
   const toggleActivity = (activity) => {
-    if (selectedActivities.includes(activity)) {
-      if (selectedActivities.length === 1) {
-        //if unchecking the last one we select all
-        setSelectedActivities([...allActivities.activities])
-      } else {
-        setSelectedActivities(selectedActivities.filter(a => a !== activity))
+    setSelectedActivities(prev => {
+      if (prev.includes(activity)) {
+        if (prev.length === 1) {
+          return [...allActivities.activities]
+        }
+        return prev.filter(item => item !== activity)
       }
-    } else {
-      setSelectedActivities([...selectedActivities, activity])
-    }
+      return [...prev, activity]
+    })
   }
 
   const selectAllActivities = () => {
     setSelectedActivities([...allActivities.activities])
+  }
+
+  const toggleChallenge = (challengeId) => {
+    setSelectedChallengeIds(prev => {
+      if (prev.includes(challengeId)) {
+        return prev.filter(id => id !== challengeId)
+      }
+
+      if (prev.length >= 3) {
+        const [, ...rest] = prev
+        return [...rest, challengeId]
+      }
+
+      return [...prev, challengeId]
+    })
   }
 
   if (loading) {
@@ -378,131 +468,10 @@ const Metrics = () => {
     <div className={styles.metricsContainer}>
       <h1 className={styles.title}>Your Metrics</h1>
 
-      {/* time filter */}
-      <div className={styles.timeFilter}>
-        <button
-          className={`${styles.timeButton} ${timeFilter === 'week' ? styles.active : ''}`}
-          onClick={() => setTimeFilter('week')}
-        >
-          Week
-        </button>
-        <button
-          className={`${styles.timeButton} ${timeFilter === 'month' ? styles.active : ''}`}
-          onClick={() => setTimeFilter('month')}
-        >
-          Month
-        </button>
-        <button
-          className={`${styles.timeButton} ${timeFilter === 'total' ? styles.active : ''}`}
-          onClick={() => setTimeFilter('total')}
-        >
-          Total
-        </button>
-      </div>
-
-      {/* line chart */}
-      {lineChartData.datasets.length > 0 ? (
-        <div className={styles.chartContainer}>
-          <div className={styles.lineChartWrapper}>
-            <Line
-              data={lineChartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    display: false
-                  },
-                  tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                      label: function(context) {
-                        return `${context.dataset.label}: ${Math.round(context.parsed.y)}`
-                      }
-                    }
-                  }
-                },
-                scales: {
-                  x: {
-                    ticks: {
-                      color: 'var(--text-secondary)',
-                      maxRotation: 0,
-                      font: {
-                        size: 11
-                      }
-                    },
-                    grid: {
-                      display: false
-                    }
-                  },
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      color: 'var(--text-secondary)',
-                      font: {
-                        size: 11
-                      },
-                      stepSize: 1,
-                      callback: function(value) {
-                        return Math.round(value)
-                      }
-                    },
-                    grid: {
-                      display: false
-                    }
-                  }
-                }
-              }}
-            />
-          </div>
-          {lineChartData.hasMetersActivity && (
-            <p className={styles.chartDisclaimer}>DISTANCES SHOWN IN 100M UNITS</p>
-          )}
-        </div>
-      ) : (
-        <div className={styles.emptyState}>
-          <p>No data available for the selected period</p>
-        </div>
-      )}
-
-      {/* activity filters */}
-      {allActivities.activities.length > 0 && (
-        <div className={styles.activityFilters}>
-          <div className={styles.filtersList}>
-            <button
-              className={`${styles.filterButton} ${selectedActivities.length === allActivities.activities.length ? styles.activeAll : ''}`}
-              onClick={selectAllActivities}
-            >
-              All
-            </button>
-            {allActivities.activities.map(activity => {
-              const config = ACTIVITY_CONFIG[activity] || ACTIVITY_CONFIG['other']
-              const IconComponent = config.Icon
-              return (
-                <button
-                  key={activity}
-                  className={`${styles.filterButton} ${selectedActivities.includes(activity) ? styles.active : ''}`}
-                  onClick={() => toggleActivity(activity)}
-                  style={{
-                    backgroundColor: selectedActivities.includes(activity) ? config.color : 'transparent',
-                    borderColor: config.color,
-                    color: selectedActivities.includes(activity) ? 'white' : config.color
-                  }}
-                >
-                  <IconComponent className={styles.filterIcon} />
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* pie chart */}
       {doughnutChartData.labels.length > 0 ? (
         <div className={styles.chartContainerSmall}>
           <div className={styles.pieChartWrapper}>
-            <Pie
+            <PieChart
               data={doughnutChartData}
               options={{
                 responsive: true,
@@ -513,19 +482,176 @@ const Metrics = () => {
                   },
                   tooltip: {
                     callbacks: {
-                      label: function(context) {
-                        return context.label || ''
+                      label: (context) => {
+                        const index = context.dataIndex
+                        const label = context.chart.data.labels?.[index] || ''
+                        const percentage = Math.round(doughnutChartData.percentages?.[index] || 0)
+                        const activityKey = doughnutChartData.activityKeys?.[index]
+                        const unit = doughnutChartData.units?.[index] || 'times'
+                        const rawValue = doughnutChartData.rawValues?.[index] || 0
+                        const amount = formatActivityTotal(activityKey, unit, rawValue)
+                        return [`${label} ${percentage}%`, amount]
                       }
+                    }
+                  },
+                  pieValuePlugin: {
+                    getText: (index) => doughnutChartData.inlineValues?.[index] || '',
+                    getPercentage: (index) => doughnutChartData.percentages?.[index] || 0,
+                    minPercentage: 5
+                  }
+                }
+              }}
+              plugins={[pieValuePlugin]}
+            />
+          </div>
+          <p className={styles.chartDisclaimer}>Select a slice to see details</p>
+        </div>
+      ) : (
+        <div className={styles.emptyState}>
+          <p>No activity data available</p>
+        </div>
+      )}
+
+      {userChallenges.length > 0 && <div className={styles.sectionDivider} />}
+
+      <div className={styles.selectionHeader}>
+        <div className={styles.challengeFilter}>
+          {(Array.isArray(userChallenges) ? userChallenges : []).map(uc => {
+            const isActive = selectedChallengeIds.includes(uc._id)
+            const title = cleanTitle(uc.challenge?.title)
+            return (
+              <button
+                key={uc._id}
+                className={`${styles.challengeButton} ${isActive ? styles.challengeButtonActive : ''}`}
+                onClick={() => toggleChallenge(uc._id)}
+                type="button"
+                title={title}
+              >
+                {title}
+              </button>
+            )
+          })}
+        </div>
+        {userChallenges.length > 0 && (
+          <p className={styles.selectionHint}>Select challenges to display below.</p>
+        )}
+      </div>
+
+      {barChartData.datasets.length > 0 ? (
+        <div className={styles.chartContainer}>
+          <div className={styles.barChartWrapper}>
+            <BarChart
+              data={barChartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false
+                  },
+                  tooltip: {
+                    callbacks: {
+                      title: (items) => {
+                        if (!items?.length) {
+                          return ''
+                        }
+                        return items[0].label || ''
+                      },
+                      label: (context) => {
+                        const dataset = context.dataset
+                        const activityKey = dataset.activityKey
+                        const baseRule = ACTIVITY_BASE_RULES[activityKey] || ACTIVITY_BASE_RULES['other']
+                        const normalizedValue = Number(context.raw) || 0
+                        const unitDescriptor = baseRule.note ? baseRule.note.split('=')[1]?.trim() : ''
+                        const rawValue = dataset.rawValues?.[context.dataIndex] || 0
+                        const unit = dataset.units?.[context.dataIndex] || 'times'
+                        const formattedTotal = formatActivityTotal(activityKey, unit, rawValue)
+
+                        if (unitDescriptor) {
+                          return `${dataset.label}: ${normalizedValue} × ${unitDescriptor} (${formattedTotal})`
+                        }
+                        return `${dataset.label}: ${formattedTotal}`
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    stacked: true,
+                    title: {
+                      display: false
+                    },
+                    ticks: {
+                      color: '#ffffff',
+                      font: {
+                        size: 11
+                      }
+                    },
+                    grid: {
+                      display: false
+                    }
+                  },
+                  y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                      color: 'var(--text-secondary)',
+                      font: {
+                        size: 11
+                      },
+                      stepSize: 1,
+                      callback: (value) => Math.round(value)
+                    },
+                    grid: {
+                      color: 'rgba(255, 255, 255, 0.05)'
                     }
                   }
                 }
               }}
             />
           </div>
+          {barChartData.conversionNotes.length > 0 && (
+            <p className={styles.chartDisclaimer}>{barChartData.conversionNotes.join(' · ')}</p>
+          )}
         </div>
       ) : (
         <div className={styles.emptyState}>
-          <p>No activity data available</p>
+          <p>No data for the selected challenges</p>
+        </div>
+      )}
+
+      {allActivities.activities.length > 0 && (
+        <div className={styles.activityFilters}>
+          <div className={styles.filtersList}>
+            <button
+              className={`${styles.filterButton} ${selectedActivities.length === allActivities.activities.length ? styles.activeAll : ''}`}
+              onClick={selectAllActivities}
+              type="button"
+            >
+              All
+            </button>
+            {allActivities.activities.map(activity => {
+              const config = ACTIVITY_CONFIG[activity] || ACTIVITY_CONFIG['other']
+              const IconComponent = config.Icon
+              const isSelected = selectedActivities.includes(activity)
+              return (
+                <button
+                  key={activity}
+                  className={`${styles.filterButton} ${isSelected ? styles.active : ''}`}
+                  onClick={() => toggleActivity(activity)}
+                  type="button"
+                  style={{
+                    backgroundColor: isSelected ? config.color : 'transparent',
+                    borderColor: config.color,
+                    color: isSelected ? 'white' : config.color
+                  }}
+                  title={config.name}
+                >
+                  {IconComponent ? <IconComponent className={styles.filterIcon} /> : null}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>
