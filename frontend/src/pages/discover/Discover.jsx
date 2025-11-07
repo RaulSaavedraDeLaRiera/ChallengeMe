@@ -295,6 +295,7 @@ const Discover = () => {
                         currentUserId={currentUserId}
                         onJoin={handleJoinChallenge}
                         isJoined={isChallengeJoined(challenge._id)}
+                        challengeStatus={challenge.status}
                       />
                     ))}
                   </div>
@@ -390,6 +391,7 @@ const Discover = () => {
                     currentUserId={currentUserId}
                     onJoin={handleJoinChallenge}
                     isJoined={isChallengeJoined(challenge._id)}
+                    challengeStatus={challenge.status}
                   />
                 ))}
               </div>

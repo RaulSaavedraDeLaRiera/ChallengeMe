@@ -259,9 +259,14 @@ const updateChallengeStatus = async (req, res) => {
 const getChallengeParticipantsCount = async (req, res) => {
   try {
     const { challengeId } = req.params;
+    const statuses = ['active'];
+    if (req.query.includeCompleted === 'true') {
+      statuses.push('completed');
+    }
+
     const count = await UserChallenge.countDocuments({ 
       challenge: challengeId,
-      status: 'active'
+      status: { $in: statuses }
     });
     res.json({ count });
   } catch (error) {

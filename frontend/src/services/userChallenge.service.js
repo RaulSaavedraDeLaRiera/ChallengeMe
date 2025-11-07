@@ -24,8 +24,8 @@ export const UserChallengeService = {
     }), 
 
   //get participants count for a challenge
-  getParticipantsCount: (challengeId) => 
-    http(`/api/user-challenges/${challengeId}/participants-count`, { method: 'GET' }),
+  getParticipantsCount: (challengeId, { includeCompleted = false } = {}) => 
+    http(`/api/user-challenges/${challengeId}/participants-count${includeCompleted ? '?includeCompleted=true' : ''}`, { method: 'GET' }),
 
   //update challenge status 
   updateStatus: (challengeId, status, token) =>

@@ -2,7 +2,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { FaFlag, FaUser, FaUsers, FaCalendarAlt, FaPlay } from 'react-icons/fa'
 import { UserChallengeService } from '../../../services/userChallenge.service'
-import { authStore } from '../../../utils/authStore'
 import styles from './ChallengeCard.module.css'
 
 export const ChallengeCard = ({ 
@@ -29,7 +28,7 @@ export const ChallengeCard = ({
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        const result = await UserChallengeService.getParticipantsCount(challenge._id)
+        const result = await UserChallengeService.getParticipantsCount(challenge._id, { includeCompleted: true })
         setParticipantsCount(result.count || 0)
       } catch (error) {
         console.error('Error fetching participants count:', error)

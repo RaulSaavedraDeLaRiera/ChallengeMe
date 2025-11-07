@@ -244,6 +244,7 @@ const Dashboard = () => {
                         currentUserId={getCurrentUserId()}
                         onJoin={handleJoinChallenge}
                         isJoined={isChallengeJoined(item._id)}
+                        challengeStatus={item.status}
                       />
                     )
                   }

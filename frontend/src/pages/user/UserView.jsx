@@ -229,6 +229,7 @@ const UserView = () => {
                 currentUserId={currentUserId}
                 onJoin={() => handleJoinChallenge(challenge._id)}
                 isJoined={false}
+                challengeStatus={challenge.status}
               />
             ))}
           </div>

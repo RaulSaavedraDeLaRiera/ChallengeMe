@@ -88,7 +88,7 @@ export const UserChallengeCard = ({
   useEffect(() => {
     const fetchParticipantsCount = async () => {
       try {
-        const result = await UserChallengeService.getParticipantsCount(challenge._id)
+        const result = await UserChallengeService.getParticipantsCount(challenge._id, { includeCompleted: true })
         setParticipantsCount(result.count || 0)
       } catch (error) {
         console.error('Error fetching participants count:', error)
