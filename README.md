@@ -2,6 +2,12 @@
 
 ChallengeMe is a social platform to create and share fitness challenges. The idea is simple: design challenges with specific activities (run 5 km, complete 50 push-ups, etc.), invite friends to join, and track progress together. It feels like a fitness-focused social network.
 
+## Technologies used
+
+- **Frontend**: React 19, React Router DOM, React Icons, Vite for bundling, plus `chart.js` with `react-chartjs-2` for the metrics visualizations.
+- **Backend**: Express, Mongoose, `jsonwebtoken` for JWT management, `bcryptjs` for password hashing, and Swagger (`swagger-jsdoc`, `swagger-ui-express`) for documentation.
+- **Testing**: Jest and Supertest for backend unit and integration tests.
+
 ## What does this project do?
 
 The application lets you build multi-activity challenges. Each activity has a goal (for instance, running 100 kilometers in a month) and you can log your progress day by day. You can also publish posts to celebrate wins or motivate others, follow fellow users to build a personalized feed, and discover new challenges and profiles.
