@@ -215,3 +215,16 @@ The app runs at `http://localhost:5173`.
 ## Documentation note
 
 Swagger docs and part of the written documentation were produced with help from language models such as ChatGPT and Gemini, always reviewed and supervised by me to ensure accuracy and clarity.
+
+## Repository overview
+
+This monorepo bundles both backend and frontend:
+
+- Backend (`/backend`)
+  - Deploy: <https://challengeme-5cfg.onrender.com>
+  - Swagger docs: <https://challengeme-5cfg.onrender.com/api-docs>
+  - Swagger serves as the official API documentation, instead of a Postman collection.
+- Frontend (`/frontend`)
+  - Deploy: <https://challengemee.netlify.app>
+
+GitHub repository: <https://github.com/RaulSaavedraDeLaRiera/ChallengeMe>
