@@ -4,6 +4,7 @@ import { FaCamera, FaRunning, FaTimes } from 'react-icons/fa'
 import styles from './Content.module.css'
 import { PostService } from '../../../services/post.service'
 import { ChallengeService } from '../../../services/challenge.service'
+import { UserChallengeService } from '../../../services/userChallenge.service'
 import { PostCard } from '../../../components/shared/PostCard/PostCard'
 import { ChallengeCard } from '../../../components/shared/ChallengeCard/ChallengeCard'
 import { authStore } from '../../../utils/authStore'
@@ -17,6 +18,7 @@ const Content = () => {
   const [posts, setPosts] = useState([])
   const [challenges, setChallenges] = useState([])
   const [loading, setLoading] = useState(true)
+  const [challengeStatuses, setChallengeStatuses] = useState({})
 
   useEffect(() => {
     const load = async () => {
@@ -27,14 +29,26 @@ const Content = () => {
         if (!myId) {
           setPosts([]); setChallenges([]); setLoading(false); return
         }
-        const [myPosts, myChallenges] = await Promise.all([
+        const token = authStore.get()
+        const [myPosts, myChallenges, myUserChallenges] = await Promise.all([
           PostService.all().then(arr => Array.isArray(arr) ? arr.filter(p => (p.user?._id || p.user)?.toString() === myId.toString()) : []),
-          ChallengeService.all().then(arr => Array.isArray(arr) ? arr.filter(c => (c.creator?._id || c.creator)?.toString() === myId.toString()) : [])
+          ChallengeService.all().then(arr => Array.isArray(arr) ? arr.filter(c => (c.creator?._id || c.creator)?.toString() === myId.toString()) : []),
+          token ? UserChallengeService.all(token) : Promise.resolve([])
         ])
+        const statusMap = Array.isArray(myUserChallenges)
+          ? myUserChallenges.reduce((acc, uc) => {
+              const challengeId = uc?.challenge?._id || uc?.challenge
+              if (challengeId) {
+                acc[challengeId.toString()] = uc.status
+              }
+              return acc
+            }, {})
+          : {}
         setPosts(myPosts)
         setChallenges(myChallenges)
+        setChallengeStatuses(statusMap)
       } catch {
-        setPosts([]); setChallenges([])
+        setPosts([]); setChallenges([]); setChallengeStatuses({})
       } finally {
         setLoading(false)
       }
@@ -97,7 +111,14 @@ const Content = () => {
               ) : (
                 <div className={styles.list}>
                   {challenges.map(c => (
-                    <ChallengeCard key={c._id} challenge={c} currentUserId={(JSON.parse(localStorage.getItem('user')||'{}')._id)} onJoin={()=>{}} isJoined={true} />
+                    <ChallengeCard
+                      key={c._id}
+                      challenge={c}
+                      currentUserId={(JSON.parse(localStorage.getItem('user')||'{}')._id)}
+                      onJoin={() => undefined}
+                      isJoined={true}
+                      challengeStatus={challengeStatuses[c._id?.toString()]}
+                    />
                   ))}
                 </div>
               )

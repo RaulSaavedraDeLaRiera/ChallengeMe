@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaMedal, FaUsers, FaUserCircle } from 'react-icons/fa'
+import { FaMedal, FaUsers } from 'react-icons/fa'
 import styles from './Discover.module.css'
 import { PostService } from '../../services/post.service'
 import { authStore } from '../../utils/authStore'
@@ -60,10 +60,13 @@ const Discover = () => {
         //load all challenges priorize olders
         const allChallenges = await ChallengeService.all()
         //filter out current users challenges
+        const now = new Date()
         const filteredChallenges = Array.isArray(allChallenges)
           ? allChallenges.filter(c => {
               const challengeCreatorId = c.creator?._id || c.creator
-              return challengeCreatorId?.toString() !== currentUserId?.toString()
+              const endDate = new Date(c.endDate)
+              const isEnded = !Number.isNaN(endDate.getTime()) && endDate < now
+              return challengeCreatorId?.toString() !== currentUserId?.toString() && !isEnded
             }).sort((a, b) => {
               //sort by newest first
               const dateA = new Date(a.createdAt || a.created_at || 0)

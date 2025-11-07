@@ -33,6 +33,8 @@ export const UserChallengeCard = ({
   const challenge = localUserChallenge?.challenge || localUserChallenge || userChallenge?.challenge || userChallenge
   const startDate = new Date(challenge.startDate)
   const endDate = new Date(challenge.endDate)
+  const now = new Date()
+  const isEnded = endDate < now
 
   //get progress from localUserChallenge.activitiesProgress
   function getActivityProgress(activityName) {
@@ -99,7 +101,6 @@ export const UserChallengeCard = ({
 
   //calculate days remaining
   const getDaysRemaining = () => {
-    const now = new Date()
     const diffTime = endDate - now
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays > 0 ? diffDays : 0
@@ -108,6 +109,7 @@ export const UserChallengeCard = ({
 
   //handle activity edit
   const handleActivityEdit = async (activity) => {
+    if (isEnded) return
     setEditingActivity(activity)
     setEditingValue(getActivityProgress(activity.name).toString())
     setShowEditModal(true)
@@ -144,6 +146,7 @@ export const UserChallengeCard = ({
 
   //handle save progress
   const handleSaveProgress = async () => {
+    if (isEnded) return
     const numericValue = parseInt(editingValue) || 0
     const maxValue = editingActivity.target
     const clampedValue = Math.max(0, Math.min(numericValue, maxValue))
@@ -234,6 +237,9 @@ export const UserChallengeCard = ({
             <span>{challenge.title}</span>
           </div>
           <div className={styles.challengeMeta}>
+          {isEnded && (
+            <span className={styles.endedBadge}>ENDED</span>
+          )}
             <div className={styles.progressWrapper}>
               <span className={styles.progressPercentage}>{overallProgress}%</span>
               {isActive && canComplete && (
@@ -276,8 +282,12 @@ export const UserChallengeCard = ({
               return (
                 <div 
                   key={index} 
-                  className={styles.activityItem}
-                  onClick={() => handleActivityEdit(activity)}
+                  className={`${styles.activityItem} ${isEnded ? styles.activityItemDisabled : ''}`}
+                  onClick={() => {
+                    if (!isEnded) {
+                      handleActivityEdit(activity)
+                    }
+                  }}
                 >
                   <div className={styles.activityHeader}>
                     <span className={styles.activityName}>{activity.name.toUpperCase()}</span>
@@ -307,7 +317,7 @@ export const UserChallengeCard = ({
         <div className={styles.challengeDates}>
           <div className={styles.daysRemaining}>
             <FaCalendarAlt className={styles.dateIcon} />
-            <span>{getDaysRemaining()} Days remaining</span>
+            <span>{isEnded ? 'Ended' : `${getDaysRemaining()} Days remaining`}</span>
           </div>
           <div className={styles.duration}>
             <span>{startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}</span>
@@ -333,7 +343,7 @@ export const UserChallengeCard = ({
       </div>
 
       {/* edit progress modal */}
-      {showEditModal && editingActivity && (
+      {showEditModal && editingActivity && !isEnded && (
         <div className={styles.modalOverlay} onClick={() => setShowEditModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>

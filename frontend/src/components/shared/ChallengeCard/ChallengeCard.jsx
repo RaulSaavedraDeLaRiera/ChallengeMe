@@ -9,7 +9,8 @@ export const ChallengeCard = ({
   challenge, 
   currentUserId, 
   onJoin,
-  isJoined = false
+  isJoined = false,
+  challengeStatus
 }) => {
   const [loading, setLoading] = useState(false)
   const [participantsCount, setParticipantsCount] = useState(
@@ -18,6 +19,10 @@ export const ChallengeCard = ({
 
   const startDate = new Date(challenge.startDate)
   const endDate = new Date(challenge.endDate)
+  const now = new Date()
+  const isEnded = endDate < now
+  const normalizedStatus = (challengeStatus || challenge?.status || '').toString().toLowerCase()
+  const isCompleted = normalizedStatus === 'completed'
   const isCreator = challenge?.creator?._id === currentUserId
 
   //fetch accurate participants count (only active)
@@ -38,7 +43,6 @@ export const ChallengeCard = ({
 
   //calculate days remaining
   const getDaysRemaining = () => {
-    const now = new Date()
     const diffTime = endDate - now
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays > 0 ? diffDays : 0
@@ -46,14 +50,14 @@ export const ChallengeCard = ({
 
   //handle join challenge
   const handleJoin = useCallback(() => {
-    if (!onJoin || isJoined || loading) return
+    if (!onJoin || isJoined || loading || isEnded || isCompleted) return
     setLoading(true)
     try {
       onJoin(challenge._id)
     } finally {
       setLoading(false)
     }
-  }, [onJoin, isJoined, loading, challenge._id])
+  }, [onJoin, isJoined, loading, challenge._id, isEnded, isCompleted])
 
   return (
     <div className={styles.challengeCard}>
@@ -63,6 +67,12 @@ export const ChallengeCard = ({
           <span>{challenge.title}</span>
         </div>
         <div className={styles.challengeMeta}>
+          {isEnded && (
+            <span className={styles.endedBadge}>ENDED</span>
+          )}
+          {isCompleted && (
+            <span className={styles.completedBadge}>COMPLETED</span>
+          )}
           <div className={styles.creatorInfo}>
             <FaUser className={styles.creatorIcon} />
             <span className={styles.creatorName}>
@@ -99,7 +109,7 @@ export const ChallengeCard = ({
       <div className={styles.challengeDates}>
         <div className={styles.daysRemaining}>
           <FaCalendarAlt className={styles.dateIcon} />
-          <span>{getDaysRemaining()} Days remaining</span>
+          <span>{isEnded ? 'Ended' : `${getDaysRemaining()} Days remaining`}</span>
         </div>
         <div className={styles.duration}>
           <span>{startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}</span>
@@ -117,7 +127,21 @@ export const ChallengeCard = ({
 
       {/* challenge actions */}
       <div className={styles.challengeActions}>
-        {isJoined ? (
+        {isCompleted ? (
+          <button 
+            className={`${styles.joinButton} ${styles.completedButton}`}
+            disabled
+          >
+            COMPLETED
+          </button>
+        ) : isEnded ? (
+          <button 
+            className={`${styles.joinButton} ${styles.endedButton}`}
+            disabled
+          >
+            ENDED
+          </button>
+        ) : isJoined ? (
           <button 
             className={`${styles.joinButton} ${styles.joinedButton}`}
             disabled

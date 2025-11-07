@@ -43,6 +43,28 @@
   gap: 12px;
 }
 
+.endedBadge {
+  background-color: var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.completedBadge {
+  background-color: var(--accent-secondary);
+  color: var(--bg-primary);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .creatorInfo {
   display: flex;
   align-items: center;
@@ -211,6 +233,28 @@
 
 .joinedButton:hover {
   background-color: var(--text-secondary);
+  transform: none;
+}
+
+.completedButton {
+  background-color: var(--accent-secondary);
+  color: var(--bg-primary);
+  cursor: not-allowed;
+}
+
+.completedButton:hover {
+  background-color: var(--accent-secondary);
+  transform: none;
+}
+
+.endedButton {
+  background-color: var(--border-color);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.endedButton:hover {
+  background-color: var(--border-color);
   transform: none;
 }
 
