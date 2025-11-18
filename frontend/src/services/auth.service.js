@@ -14,5 +14,10 @@ export const AuthService = {
     method: 'GET',
     token
   }), 
-  getUserById: (userId) => http(`/api/users/${userId}`, { method: 'GET' })
+  getUserById: (userId) => http(`/api/users/${userId}`, { method: 'GET' }),
+  refresh: (token) => http('/api/auth/refresh', {
+    method: 'POST',
+    token,
+    retryOn401: false //don't retry refresh to avoid infinite loop
+  })
 }

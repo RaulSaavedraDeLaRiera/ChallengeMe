@@ -14,11 +14,57 @@ import UserView from './pages/user/UserView'
 import './App.css'
 import { Navigate, Outlet } from 'react-router-dom'
 import { authStore } from './utils/authStore'
+import { useEffect, useState } from 'react'
 
-//guard for protected routes: redirects to /login when no token
+//guard for protected routes: redirects to /login when no token or token expired
 const RequireAuth = () => {
-  const token = authStore.get()
-  if (!token) return <Navigate to="/login" replace />
+  const [token, setToken] = useState(authStore.get())
+  const [isExpired, setIsExpired] = useState(false)
+
+  //listen for token expiration and refresh events
+  useEffect(() => {
+    const handleTokenExpired = () => {
+      setIsExpired(true)
+      setToken(null)
+    }
+
+    const handleTokenRefreshed = () => {
+      //token was refreshed, update state
+      const currentToken = authStore.get()
+      setToken(currentToken)
+      setIsExpired(false)
+    }
+
+    window.addEventListener('token-expired', handleTokenExpired)
+    window.addEventListener('token-refreshed', handleTokenRefreshed)
+    
+    //also check token on mount and periodically
+    const checkToken = () => {
+      const currentToken = authStore.get()
+      if (!currentToken && token) {
+        setIsExpired(true)
+      }
+      setToken(currentToken)
+    }
+
+    //check immediately
+    checkToken()
+    
+    //check periodically, like 30 seconds
+    const interval = setInterval(checkToken, 30000)
+
+    return () => {
+      window.removeEventListener('token-expired', handleTokenExpired)
+      window.removeEventListener('token-refreshed', handleTokenRefreshed)
+      clearInterval(interval)
+    }
+  }, [token])
+
+  //redirect to login if no token or token expired
+  if (!token || isExpired) {
+    return <Navigate to="/login" replace />
+  }
+
   return <Outlet />
 }
 
