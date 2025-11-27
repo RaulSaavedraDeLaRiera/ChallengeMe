@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Welcome from './pages/initial/Welcome'
+import MoveMore from './pages/initial/MoveMore'
+import CommunityShowcase from './pages/initial/CommunityShowcase'
 import { Login } from './pages/initial/Login/Login'
 import Register from './pages/initial/Register/Register'
 import Layout from './components/layout/Layout'
@@ -87,6 +89,8 @@ function App() {
             </Route>
           </Route>
           <Route path="/welcome" element={<Welcome />} />
+          <Route path="/move-more" element={<MoveMore />} />
+          <Route path="/community" element={<CommunityShowcase />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

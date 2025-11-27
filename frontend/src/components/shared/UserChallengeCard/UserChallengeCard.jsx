@@ -35,6 +35,9 @@ export const UserChallengeCard = ({
   const endDate = new Date(challenge.endDate)
   const now = new Date()
   const isEnded = endDate < now
+  const normalizedStatus = (localUserChallenge?.status || '').toString().toLowerCase()
+  const isCompleted = normalizedStatus === 'completed'
+  const shouldDisplayEnded = isEnded && !isCompleted
 
   //get progress from localUserChallenge.activitiesProgress
   function getActivityProgress(activityName) {
@@ -62,7 +65,7 @@ export const UserChallengeCard = ({
   }
 
   const isCreator = creator?._id === currentUserId || challenge?.creator === currentUserId
-  const isActive = localUserChallenge?.status === 'active'
+  const isActive = normalizedStatus === 'active'
   const overallProgress = calculateOverallProgress()
   const canComplete = isActive && overallProgress === 100
 
@@ -237,8 +240,11 @@ export const UserChallengeCard = ({
             <span>{challenge.title}</span>
           </div>
           <div className={styles.challengeMeta}>
-          {isEnded && (
+          {shouldDisplayEnded && (
             <span className={styles.endedBadge}>ENDED</span>
+          )}
+          {isCompleted && (
+            <span className={styles.completedBadge}>COMPLETED</span>
           )}
             <div className={styles.progressWrapper}>
               <span className={styles.progressPercentage}>{overallProgress}%</span>
@@ -317,7 +323,13 @@ export const UserChallengeCard = ({
         <div className={styles.challengeDates}>
           <div className={styles.daysRemaining}>
             <FaCalendarAlt className={styles.dateIcon} />
-            <span>{isEnded ? 'Ended' : `${getDaysRemaining()} Days remaining`}</span>
+            <span>
+              {isCompleted
+                ? 'Completed'
+                : shouldDisplayEnded
+                  ? 'Ended'
+                  : `${getDaysRemaining()} Days remaining`}
+            </span>
           </div>
           <div className={styles.duration}>
             <span>{startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}</span>

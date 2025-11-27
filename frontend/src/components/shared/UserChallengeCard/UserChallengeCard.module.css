@@ -53,6 +53,18 @@
   text-transform: uppercase;
 }
 
+.completedBadge {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: var(--success);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
 .progressWrapper {
   display: flex;
   flex-direction: column;

@@ -160,7 +160,7 @@ Every endpoint includes sample payloads and response codes.
 
 ### Design guidelines
 
-The interface follows a modern dark theme. Colors rely on shared CSS variables for consistency, components are reusable, and layouts adapt gracefully from mobile to desktop.
+The interface follows a modern dark theme. Colors rely on shared CSS variables for consistency, components are reusable, and layouts adapt gracefully from mobile to desktop. The overall look is intentionally utilitarian—similar to endurance platforms such as Strava—so dashboards stay clean and easy to scan. For a more narrative/business-oriented glimpse you can open the public tours at `/welcome`, where the “Community” and “Move More” pages highlight richer styles without breaking the core minimalist aesthetic.
 
 ## Installation and development
 

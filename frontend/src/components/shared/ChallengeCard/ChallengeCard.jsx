@@ -23,6 +23,7 @@ export const ChallengeCard = ({
   const normalizedStatus = (challengeStatus || challenge?.status || '').toString().toLowerCase()
   const isCompleted = normalizedStatus === 'completed'
   const isCreator = challenge?.creator?._id === currentUserId
+  const shouldDisplayEnded = isEnded && !isCompleted
 
   //fetch accurate participants count (only active)
   useEffect(() => {
@@ -66,7 +67,7 @@ export const ChallengeCard = ({
           <span>{challenge.title}</span>
         </div>
         <div className={styles.challengeMeta}>
-          {isEnded && (
+          {shouldDisplayEnded && (
             <span className={styles.endedBadge}>ENDED</span>
           )}
           {isCompleted && (
@@ -108,7 +109,13 @@ export const ChallengeCard = ({
       <div className={styles.challengeDates}>
         <div className={styles.daysRemaining}>
           <FaCalendarAlt className={styles.dateIcon} />
-          <span>{isEnded ? 'Ended' : `${getDaysRemaining()} Days remaining`}</span>
+          <span>
+            {isCompleted
+              ? 'Completed'
+              : shouldDisplayEnded
+                ? 'Ended'
+                : `${getDaysRemaining()} Days remaining`}
+          </span>
         </div>
         <div className={styles.duration}>
           <span>{startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}</span>
