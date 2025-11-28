@@ -215,14 +215,19 @@ export const UserChallengeCard = ({
     try {
       await UserChallengeService.updateStatus(challenge._id, 'abandoned', token)
       
+      //update local state to reflect removal immediately
+      setLocalUserChallenge(prev => ({
+        ...prev,
+        status: 'abandoned'
+      }))
+      
       //call parent callback to refresh data
       if (onProgressUpdate) {
         onProgressUpdate()
       }
       
       setShowAbandonModal(false)
-      //reload page to immediately reflect removal
-      window.location.reload()
+      //no need to reload page, state update handle UI update
     } catch (error) {
       console.error('Error abandoning challenge:', error)
     } finally {

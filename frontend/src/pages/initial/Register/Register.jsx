@@ -5,11 +5,13 @@ import { Container } from '../../../components/shared'
 import { AuthService } from '../../../services/auth.service'
 import { authStore } from '../../../utils/authStore'
 import { storage } from '../../../utils/storage'
+import { useAuth } from '../../../contexts/AuthContext'
 import styles from './Register.module.css'
 
 //register page: new user registration with slider effect and validation
 const Register = () => {
   const navigate = useNavigate()
+  const { setToken } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -71,9 +73,12 @@ const Register = () => {
       //persist auth
       authStore.set(token)
       storage.set('user', user ?? null)
-
-      //redirect
-      navigate('/dashboard')
+      //update context to reflect new token, updates state
+      setToken(token)
+      //redirect to dashboard, use settimeout to ensure state is updated
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true })
+      }, 0)
     } catch (err) {
       setError('Connection error. Please try again.')
     } finally {

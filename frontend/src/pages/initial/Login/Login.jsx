@@ -4,12 +4,14 @@ import { FaEnvelope, FaLock, FaSignInAlt } from 'react-icons/fa'
 import { AuthService } from '../../../services/auth.service'
 import { authStore } from '../../../utils/authStore'
 import { storage } from '../../../utils/storage'
+import { useAuth } from '../../../contexts/AuthContext'
 import { Container, Card, Input, Button } from '../../../components/shared'
 import styles from './Login.module.css'
 
 //login page: user authentication, validates credentials and stores the token in localStorage
 export const Login = () => {
   const navigate = useNavigate()
+  const { setToken } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -35,11 +37,15 @@ export const Login = () => {
       //check if user exists
       const user = data.user ?? data?.data?.user ?? data?.data;
       if(!token) throw new Error('Backend did not return token')
-      //save in storage
+      //save in storage first
       authStore.set(token)
       storage.set('user', user ?? null)
-      //redirect to dashboard after login if exists
-      navigate('/dashboard')
+      //update context to reflect new token, updates state
+      setToken(token)
+      //redirect to dashboard, use settimeout to state updated
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true })
+      }, 0)
     } catch (err) {
       setError(err.message || 'Error logging in')
     } finally {

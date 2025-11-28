@@ -14,6 +14,14 @@ const parse = async (res) => {
   }
 }
 
+//global reference to auth context
+let authContextRef = null
+
+//set auth context ref
+export const setAuthContextRef = (ref) => {
+  authContextRef = ref
+}
+
 //attempt to refresh token when expired
 const attemptTokenRefresh = async (expiredToken) => {
   try {
@@ -44,7 +52,7 @@ const attemptTokenRefresh = async (expiredToken) => {
   }
 }
 
-//handle token expiration - try refresh first, then redirect to login
+//handle token expiration - try refresh first, then notify context 
 const handleTokenExpiration = async (expiredToken) => {
   const { authStore } = await import('../utils/authStore')
   
@@ -52,15 +60,16 @@ const handleTokenExpiration = async (expiredToken) => {
   const newToken = await attemptTokenRefresh(expiredToken)
   
   if (newToken) {
-    //token refreshed successfully, notify components
-    window.dispatchEvent(new CustomEvent('token-refreshed', { detail: { token: newToken } }))
+    //token refreshed successfully, then notify context 
+    if (authContextRef?.refreshToken) {
+      authContextRef.refreshToken(newToken)
+    }
     return newToken
   } else {
-    //refresh failed, clear token and redirect to login
+    //refresh failed, clear token and notify context to nav
     authStore.clear()
-    window.dispatchEvent(new CustomEvent('token-expired'))
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login'
+    if (authContextRef?.expireToken) {
+      authContextRef.expireToken()
     }
     return null
   }
