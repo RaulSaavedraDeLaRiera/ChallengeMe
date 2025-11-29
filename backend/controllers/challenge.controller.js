@@ -1,6 +1,7 @@
 //challenge management: create, join, list challenges
 const Challenge = require('../models/Challenge.model');
 const UserChallenge = require('../models/UserChallenge.model');
+const logger = require('../utils/logger');
 
 const getAllChallenges = async (req, res) => {
   try {
@@ -10,7 +11,8 @@ const getAllChallenges = async (req, res) => {
     const challenges = await Challenge.find(query)
       .populate('creator', 'name email')
       .populate('participants', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(challenges);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -21,7 +23,8 @@ const getChallengeById = async (req, res) => {
   try {
     const challenge = await Challenge.findById(req.params.id)
       .populate('creator', 'name email')
-      .populate('participants', 'name email');
+      .populate('participants', 'name email')
+      .lean();
     
     if (!challenge) {
       return res.status(404).json({ message: 'Challenge not found' });
@@ -63,18 +66,18 @@ const createChallenge = async (req, res) => {
       });
       
       await userChallenge.save();
-      console.log(`userChallenge:create user=${req.userId} challenge=${challenge._id.toString()}`)
+      logger.info(`userChallenge:create user=${req.userId} challenge=${challenge._id.toString()}`);
     } catch (ucError) {
-      console.error(`userChallenge:create error=${ucError.message}`)
+      logger.error(`userChallenge:create error=${ucError.message}`, { error: ucError });
     }
     
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name');
-    console.log(`challenge:create id=${challenge._id.toString()} title=${challenge.title}`)
+    logger.info(`challenge:create id=${challenge._id.toString()} title=${challenge.title}`);
     
     res.status(201).json(challenge);
   } catch (error) {
-    console.error(`challenge:create error=${error.message}`)
+    logger.error(`challenge:create error=${error.message}`, { error });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -90,7 +93,7 @@ const joinChallenge = async (req, res) => {
     
     //check if already participating
     if (challenge.participants.includes(req.userId)) {
-      return res.status(400).json({ message: 'Already participating' });
+      return res.status(409).json({ message: 'Already participating' });
     }
     
     //add to participants
@@ -99,11 +102,11 @@ const joinChallenge = async (req, res) => {
     
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name email');
-    console.log(`challenge:join id=${challenge._id.toString()} user=${req.userId}`)
+    logger.info(`challenge:join id=${challenge._id.toString()} user=${req.userId}`);
     
     res.json(challenge);
   } catch (error) {
-    console.error('challenge:join error', error.message)
+    logger.error('challenge:join error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -119,7 +122,8 @@ const getMyChallenges = async (req, res) => {
     })
       .populate('creator', 'name email')
       .populate('participants', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     
     res.json(challenges);
   } catch (error) {

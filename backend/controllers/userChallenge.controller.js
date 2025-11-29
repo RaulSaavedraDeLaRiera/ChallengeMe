@@ -1,8 +1,7 @@
 //user challenge management: handle users participation and progress in challenges
-
-
 const UserChallenge = require('../models/UserChallenge.model');
 const Challenge = require('../models/Challenge.model');
+const logger = require('../utils/logger');
 
 const getUserChallenges = async (req, res) => {
   try {
@@ -12,11 +11,12 @@ const getUserChallenges = async (req, res) => {
     })
       .populate('challenge', 'title description activities startDate endDate creator participants')
       .populate('challenge.creator', 'name email')
-      .sort({ joinedAt: -1 });
+      .sort({ joinedAt: -1 })
+      .lean();
     
     res.json(userChallenges);
   } catch (error) {
-    console.error('getUserChallenges error:', error.message);
+    logger.error('getUserChallenges error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -29,11 +29,12 @@ const getAllUserChallenges = async (req, res) => {
     })
       .populate('challenge', 'title description activities startDate endDate creator participants')
       .populate('challenge.creator', 'name email')
-      .sort({ joinedAt: -1 });
+      .sort({ joinedAt: -1 })
+      .lean();
     
     res.json(userChallenges);
   } catch (error) {
-    console.error('getAllUserChallenges error:', error.message);
+    logger.error('getAllUserChallenges error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -42,6 +43,7 @@ const joinChallenge = async (req, res) => {
   try {
     const { challengeId } = req.params;
     
+    //get challenge without lean since we might need to modify it
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
       return res.status(404).json({ message: 'Challenge not found' });
@@ -89,7 +91,7 @@ const joinChallenge = async (req, res) => {
       await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator')
       await existingUserChallenge.populate('challenge.creator', 'name email')
       
-      console.log(`userChallenge:rejoin user=${req.userId} challenge=${challengeId}`)
+      logger.info(`userChallenge:rejoin user=${req.userId} challenge=${challengeId}`);
       
       return res.status(200).json({
         message: 'Rejoined challenge',
@@ -121,11 +123,11 @@ const joinChallenge = async (req, res) => {
     await userChallenge.populate('challenge', 'title description activities startDate endDate creator');
     await userChallenge.populate('challenge.creator', 'name email');
     
-    console.log(`userChallenge:join user=${req.userId} challenge=${challengeId}`);
+    logger.info(`userChallenge:join user=${req.userId} challenge=${challengeId}`);
     
     res.status(201).json(userChallenge);
   } catch (error) {
-    console.error('joinChallenge error:', error.message);
+    logger.error('joinChallenge error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -137,7 +139,7 @@ const getChallengeProgress = async (req, res) => {
     const userChallenge = await UserChallenge.findOne({
       user: req.userId,
       challenge: challengeId
-    }).populate('challenge', 'title description activities startDate endDate');
+    }).populate('challenge', 'title description activities startDate endDate').lean();
     
     if (!userChallenge) {
       return res.status(404).json({ message: 'User not participating in this challenge' });
@@ -145,7 +147,7 @@ const getChallengeProgress = async (req, res) => {
     
     res.json(userChallenge);
   } catch (error) {
-    console.error('getChallengeProgress error:', error.message);
+    logger.error('getChallengeProgress error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -177,7 +179,7 @@ const updateActivityProgress = async (req, res) => {
     );
     
     if (!challengeActivity) {
-      return res.status(400).json({ message: 'Activity not found in challenge' });
+      return res.status(404).json({ message: 'Activity not found in challenge' });
     }
     
     if (progress > challengeActivity.target) {
@@ -204,11 +206,11 @@ const updateActivityProgress = async (req, res) => {
     
     await userChallenge.save();
     
-    console.log(`userChallenge:updateProgress user=${req.userId} challenge=${challengeId} activity=${activityId} progress=${progress}`);
+    logger.info(`userChallenge:updateProgress user=${req.userId} challenge=${challengeId} activity=${activityId} progress=${progress}`);
     
     res.json(userChallenge);
   } catch (error) {
-    console.error('updateActivityProgress error:', error.message);
+    logger.error('updateActivityProgress error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -247,11 +249,11 @@ const updateChallengeStatus = async (req, res) => {
       }
     }
     
-    console.log(`userChallenge:updateStatus user=${req.userId} challenge=${challengeId} status=${status}`);
+    logger.info(`userChallenge:updateStatus user=${req.userId} challenge=${challengeId} status=${status}`);
     
     res.json(userChallenge);
   } catch (error) {
-    console.error('updateChallengeStatus error:', error.message);
+    logger.error('updateChallengeStatus error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -270,7 +272,7 @@ const getChallengeParticipantsCount = async (req, res) => {
     });
     res.json({ count });
   } catch (error) {
-    console.error('getChallengeParticipantsCount error:', error.message);
+    logger.error('getChallengeParticipantsCount error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

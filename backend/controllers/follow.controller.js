@@ -1,5 +1,6 @@
 //user follow system : follow, unfollow, get his followers
 const Follow = require('../models/Follow.model');
+const logger = require('../utils/logger');
 
 //follow a user
 const followUser = async (req, res) => {
@@ -12,9 +13,9 @@ const followUser = async (req, res) => {
     }
 
     //check if already following
-    const existingFollow = await Follow.findOne({ follower: req.userId, following: userId });
+    const existingFollow = await Follow.findOne({ follower: req.userId, following: userId }).lean();
     if (existingFollow) {
-      return res.status(400).json({ message: 'Already following this user' });
+      return res.status(409).json({ message: 'Already following this user' });
     }
 
     //create follow relationship
@@ -23,11 +24,11 @@ const followUser = async (req, res) => {
       following: userId
     });
     await follow.save();
-    console.log(`follow:create follower=${req.userId} following=${userId}`)
+    logger.info(`follow:create follower=${req.userId} following=${userId}`);
 
     res.json({ message: 'User followed successfully' });
   } catch (error) {
-    console.error('follow:create error', error.message)
+    logger.error('follow:create error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -43,11 +44,10 @@ const unfollowUser = async (req, res) => {
       return res.status(404).json({ message: 'Not following this user' });
     }
 
-    console.log(`follow:delete follower=${req.userId} following=${userId}`)
+    logger.info(`follow:delete follower=${req.userId} following=${userId}`);
     res.json({ message: 'User unfollowed successfully' });
   } catch (error) {
-    console.error('follow:delete error', error.message)
-    console.error(`follow:create error=${error.message}`)
+    logger.error('follow:delete error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -56,10 +56,10 @@ const unfollowUser = async (req, res) => {
 const getFollowers = async (req, res) => {
   try {
     const { userId } = req.params;
-    const follows = await Follow.find({ following: userId }).populate('follower', 'name email');
+    const follows = await Follow.find({ following: userId }).populate('follower', 'name email').lean();
     res.json(follows.map(f => f.follower));
   } catch (error) {
-    console.error(`follow:delete error=${error.message}`)
+    logger.error('getFollowers error', { error, message: error.message });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -68,7 +68,7 @@ const getFollowers = async (req, res) => {
 const getFollowing = async (req, res) => {
   try {
     const { userId } = req.params;
-    const follows = await Follow.find({ follower: userId }).populate('following', 'name email');
+    const follows = await Follow.find({ follower: userId }).populate('following', 'name email').lean();
     res.json(follows.map(f => f.following));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

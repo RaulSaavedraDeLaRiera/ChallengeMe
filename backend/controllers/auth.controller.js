@@ -8,9 +8,9 @@ const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     //check if exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email }).lean();
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'User already exists' });
     }
 
     //create a new one
@@ -18,7 +18,7 @@ const register = async (req, res) => {
     await user.save();
 
     //generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXP || '7d' });
 
     res.status(201).json({
       message: 'User created successfully',
@@ -40,7 +40,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     //check if exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).lean();
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -52,7 +52,7 @@ const login = async (req, res) => {
     }
 
     //generate his token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXP || '7d' });
 
     res.json({
       message: 'Login successful',
@@ -88,13 +88,13 @@ const refresh = async (req, res) => {
     }
 
     //check if user still exists
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId).lean();
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
 
     //generate new token
-    const newToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const newToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXP || '7d' });
 
     res.json({
       message: 'Token refreshed successfully',

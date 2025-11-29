@@ -3,7 +3,7 @@ const User = require('../models/User.model');
 
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-password');
+    const user = await User.findById(req.userId).select('-password').lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -16,7 +16,7 @@ const getMe = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const { userId } = req.params;
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('-password').lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -39,7 +39,7 @@ const searchUsers = async (req, res) => {
         { name: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } }
       ]
-    }).select('-password').limit(20);
+    }).select('-password').limit(20).lean();
     
     res.json(users);
   } catch (error) {

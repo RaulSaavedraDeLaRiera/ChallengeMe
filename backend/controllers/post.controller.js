@@ -1,6 +1,7 @@
 //social posts: create, like, comment, feed...
 const Post = require('../models/Post.model');
 const Follow = require('../models/Follow.model');
+const logger = require('../utils/logger');
 
 const getAllPosts = async (req, res) => {
   try { 
@@ -12,7 +13,8 @@ const getAllPosts = async (req, res) => {
       .populate('challenge', 'title')
       .populate('likes', 'name')
       .populate('comments.user', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     
     res.json(posts);
   } catch (error) {
@@ -28,7 +30,7 @@ const getFeed = async (req, res) => {
     let posts;
     if (userId) {
       //get users that current user follows
-      const follows = await Follow.find({ follower: userId });
+      const follows = await Follow.find({ follower: userId }).lean();
       const followingIds = follows.map(f => f.following);
       
       //if not following anyone, return empty array 
@@ -42,7 +44,8 @@ const getFeed = async (req, res) => {
         .populate('challenge', 'title')
         .populate('likes', 'name')
         .populate('comments.user', 'name')
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
       
       //filter to ensure only posts from follow 
       const followingIdsSet = new Set(followingIds.map(id => id.toString()));
@@ -74,11 +77,11 @@ const createPost = async (req, res) => {
     await post.save();
     await post.populate('user', 'name email');
     await post.populate('challenge', 'title');
-    console.log(`post:create id=${post._id.toString()} user=${post.user?.name} title=${post.title}`)
+    logger.info(`post:create id=${post._id.toString()} user=${post.user?.name} title=${post.title}`);
     
     res.status(201).json(post);
   } catch (error) {
-    console.error(`post:create error=${error.message}`)
+    logger.error(`post:create error=${error.message}`, { error });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
