@@ -3,7 +3,7 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-//determine if we should use file logging (local development) or console only (production/cloud)
+//determine if use file logging, for local development or console only for production/cloud
 const isProduction = process.env.NODE_ENV === 'production';
 const useFileLogging = process.env.USE_FILE_LOGGING === 'true' || !isProduction;
 
@@ -56,7 +56,7 @@ if (useFileLogging) {
   );
 }
 
-//always add console transport (Render and other cloud services capture stdout/stderr)
+//always add console transport, cloud services capture stdout/stderr
 transports.push(
   new winston.transports.Console({
     format: isProduction ? logFormat : consoleFormat
@@ -95,7 +95,7 @@ if (useFileLogging) {
     })
   ];
 } else {
-  //in production, log exceptions/rejections to console (captured by Render)
+  //in production, log exceptions/rejections to console
   logger.exceptionHandlers = [
     new winston.transports.Console({
       format: logFormat

@@ -1,6 +1,7 @@
 /guide
+/frontend/dist
 
-# depdencies
+# dependencies
 node_modules/
 
 # env vars
