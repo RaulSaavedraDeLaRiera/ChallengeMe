@@ -2,12 +2,13 @@
 const Challenge = require('../models/Challenge.model');
 const UserChallenge = require('../models/UserChallenge.model');
 const logger = require('../utils/logger');
+const { NotFoundError, ConflictError } = require('../errors/AppError');
 
-const getAllChallenges = async (req, res) => {
+const getAllChallenges = async (req, res, next) => {
   try {
     const { creator } = req.query;
     const query = creator ? { creator } : {};
-    
+
     const challenges = await Challenge.find(query)
       .populate('creator', 'name email')
       .populate('participants', 'name')
@@ -15,48 +16,49 @@ const getAllChallenges = async (req, res) => {
       .lean();
     res.json(challenges);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const getChallengeById = async (req, res) => {
+const getChallengeById = async (req, res, next) => {
   try {
     const challenge = await Challenge.findById(req.params.id)
       .populate('creator', 'name email')
       .populate('participants', 'name email')
       .lean();
-    
+
     if (!challenge) {
-      return res.status(404).json({ message: 'Challenge not found' });
+      throw new NotFoundError('Challenge not found');
     }
-    
+
     res.json(challenge);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const createChallenge = async (req, res) => {
+const createChallenge = async (req, res, next) => {
   try {
     const challenge = new Challenge({
       ...req.body,
       creator: req.userId
     });
-    // creator is participant
-    if (!Array.isArray(challenge.participants)) challenge.participants = []
+
+    //creator is automatically a participant
+    if (!Array.isArray(challenge.participants)) challenge.participants = [];
     if (!challenge.participants.find((p) => p?.toString() === req.userId?.toString())) {
-      challenge.participants.push(req.userId)
+      challenge.participants.push(req.userId);
     }
     await challenge.save();
-    
-    //create user challenge for creator so it appears in your page
+
+    //create UserChallenge for creator so it appears in their dashboard
     try {
       const activitiesProgress = challenge.activities.map(activity => ({
         activityId: activity.name,
         progress: 0,
         lastUpdated: new Date()
       }));
-      
+
       const userChallenge = new UserChallenge({
         user: req.userId,
         challenge: challenge._id,
@@ -64,55 +66,53 @@ const createChallenge = async (req, res) => {
         status: 'active',
         joinedAt: new Date()
       });
-      
+
       await userChallenge.save();
       logger.info(`userChallenge:create user=${req.userId} challenge=${challenge._id.toString()}`);
     } catch (ucError) {
       logger.error(`userChallenge:create error=${ucError.message}`, { error: ucError });
     }
-    
+
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name');
     logger.info(`challenge:create id=${challenge._id.toString()} title=${challenge.title}`);
-    
+
     res.status(201).json(challenge);
   } catch (error) {
     logger.error(`challenge:create error=${error.message}`, { error });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
 //join a challenge (add to participants)
-const joinChallenge = async (req, res) => {
+const joinChallenge = async (req, res, next) => {
   try {
     const challenge = await Challenge.findById(req.params.id);
-    
+
     if (!challenge) {
-      return res.status(404).json({ message: 'Challenge not found' });
+      throw new NotFoundError('Challenge not found');
     }
-    
-    //check if already participating
+
     if (challenge.participants.includes(req.userId)) {
-      return res.status(409).json({ message: 'Already participating' });
+      throw new ConflictError('Already participating');
     }
-    
-    //add to participants
+
     challenge.participants.push(req.userId);
     await challenge.save();
-    
+
     await challenge.populate('creator', 'name email');
     await challenge.populate('participants', 'name email');
     logger.info(`challenge:join id=${challenge._id.toString()} user=${req.userId}`);
-    
+
     res.json(challenge);
   } catch (error) {
     logger.error('challenge:join error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
 //get challenges where user is creator or participant
-const getMyChallenges = async (req, res) => {
+const getMyChallenges = async (req, res, next) => {
   try {
     const challenges = await Challenge.find({
       $or: [
@@ -124,13 +124,13 @@ const getMyChallenges = async (req, res) => {
       .populate('participants', 'name')
       .sort({ createdAt: -1 })
       .lean();
-    
+
     res.json(challenges);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
- 
+
 module.exports = {
   getAllChallenges,
   getChallengeById,

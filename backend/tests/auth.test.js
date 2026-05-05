@@ -61,7 +61,7 @@ describe('Auth Endpoints', () => {
           password: 'password123'
         });
       
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(409);
       expect(res.body.message).toBe('User already exists');
     });
 
@@ -72,7 +72,8 @@ describe('Auth Endpoints', () => {
           name: 'Test User'
         });
       
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty('message');
     });
 
     it('should validate email format', async () => {

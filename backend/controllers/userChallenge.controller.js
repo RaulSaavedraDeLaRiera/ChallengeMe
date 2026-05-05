@@ -2,10 +2,11 @@
 const UserChallenge = require('../models/UserChallenge.model');
 const Challenge = require('../models/Challenge.model');
 const logger = require('../utils/logger');
+const { ValidationError, NotFoundError } = require('../errors/AppError');
 
-const getUserChallenges = async (req, res) => {
+const getUserChallenges = async (req, res, next) => {
   try {
-    const userChallenges = await UserChallenge.find({ 
+    const userChallenges = await UserChallenge.find({
       user: req.userId,
       status: 'active'
     })
@@ -13,100 +14,97 @@ const getUserChallenges = async (req, res) => {
       .populate('challenge.creator', 'name email')
       .sort({ joinedAt: -1 })
       .lean();
-    
+
     res.json(userChallenges);
   } catch (error) {
     logger.error('getUserChallenges error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-//get all user challenge
-const getAllUserChallenges = async (req, res) => {
+//get all user challenges
+const getAllUserChallenges = async (req, res, next) => {
   try {
-    const userChallenges = await UserChallenge.find({ 
+    const userChallenges = await UserChallenge.find({
       user: req.userId
     })
       .populate('challenge', 'title description activities startDate endDate creator participants')
       .populate('challenge.creator', 'name email')
       .sort({ joinedAt: -1 })
       .lean();
-    
+
     res.json(userChallenges);
   } catch (error) {
     logger.error('getAllUserChallenges error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const joinChallenge = async (req, res) => {
+const joinChallenge = async (req, res, next) => {
   try {
     const { challengeId } = req.params;
-    
-    //get challenge without lean since we might need to modify it
+
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
-      return res.status(404).json({ message: 'Challenge not found' });
+      throw new NotFoundError('Challenge not found');
     }
 
     const existingUserChallenge = await UserChallenge.findOne({
       user: req.userId,
       challenge: challengeId
     });
-    
-    //if exists and is active return it
+
+    //if exists and is active, return it
     if (existingUserChallenge && existingUserChallenge.status === 'active') {
-      await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator')
-      await existingUserChallenge.populate('challenge.creator', 'name email')
-      
-      return res.status(200).json({ 
+      await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator');
+      await existingUserChallenge.populate('challenge.creator', 'name email');
+
+      return res.status(200).json({
         message: 'Already participating in this challenge',
         userChallenge: existingUserChallenge,
         alreadyJoined: true
       });
     }
-    
-    //if exists but was abandoned reactivate
+
+    //if exists but was abandoned, reactivate it
     if (existingUserChallenge && existingUserChallenge.status === 'abandoned') {
-      //reset progress to 0
       const activitiesProgress = challenge.activities.map(activity => ({
         activityId: activity.name,
         progress: 0,
         lastUpdated: new Date()
       }));
-      
-      existingUserChallenge.status = 'active'
-      existingUserChallenge.activitiesProgress = activitiesProgress
-      existingUserChallenge.completedAt = undefined
-      existingUserChallenge.joinedAt = new Date()
-      
-      await existingUserChallenge.save()
-      
-      //add user to participants if not already there
+
+      existingUserChallenge.status = 'active';
+      existingUserChallenge.activitiesProgress = activitiesProgress;
+      existingUserChallenge.completedAt = undefined;
+      existingUserChallenge.joinedAt = new Date();
+
+      await existingUserChallenge.save();
+
       if (!challenge.participants.includes(req.userId)) {
-        challenge.participants.push(req.userId)
-        await challenge.save()
+        challenge.participants.push(req.userId);
+        await challenge.save();
       }
-      
-      await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator')
-      await existingUserChallenge.populate('challenge.creator', 'name email')
-      
+
+      await existingUserChallenge.populate('challenge', 'title description activities startDate endDate creator');
+      await existingUserChallenge.populate('challenge.creator', 'name email');
+
       logger.info(`userChallenge:rejoin user=${req.userId} challenge=${challengeId}`);
-      
+
       return res.status(200).json({
         message: 'Rejoined challenge',
         userChallenge: existingUserChallenge,
         alreadyJoined: false
-      })
+      });
     }
-    
+
     //init progress for all activities
     const activitiesProgress = challenge.activities.map(activity => ({
       activityId: activity.name,
       progress: 0,
       lastUpdated: new Date()
     }));
-    
+
     const userChallenge = new UserChallenge({
       user: req.userId,
       challenge: challengeId,
@@ -114,151 +112,144 @@ const joinChallenge = async (req, res) => {
       status: 'active',
       joinedAt: new Date()
     });
-    
+
     await userChallenge.save();
-    
+
     challenge.participants.push(req.userId);
     await challenge.save();
-    
+
     await userChallenge.populate('challenge', 'title description activities startDate endDate creator');
     await userChallenge.populate('challenge.creator', 'name email');
-    
+
     logger.info(`userChallenge:join user=${req.userId} challenge=${challengeId}`);
-    
+
     res.status(201).json(userChallenge);
   } catch (error) {
     logger.error('joinChallenge error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const getChallengeProgress = async (req, res) => {
+const getChallengeProgress = async (req, res, next) => {
   try {
     const { challengeId } = req.params;
-    
+
     const userChallenge = await UserChallenge.findOne({
       user: req.userId,
       challenge: challengeId
     }).populate('challenge', 'title description activities startDate endDate').lean();
-    
+
     if (!userChallenge) {
-      return res.status(404).json({ message: 'User not participating in this challenge' });
+      throw new NotFoundError('User not participating in this challenge');
     }
-    
+
     res.json(userChallenge);
   } catch (error) {
     logger.error('getChallengeProgress error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const updateActivityProgress = async (req, res) => {
+const updateActivityProgress = async (req, res, next) => {
   try {
     const { challengeId } = req.params;
     const { activityId, progress } = req.body;
-    
+
     if (!activityId || progress === undefined) {
-      return res.status(400).json({ message: 'activityId and progress are required' });
+      throw new ValidationError('activityId and progress are required');
     }
-    
-    if (progress < 0) {
-      return res.status(400).json({ message: 'Progress cannot be negative' });
+
+    if (typeof progress !== 'number' || progress < 0) {
+      throw new ValidationError('Progress must be a non-negative number');
     }
-    
+
     const userChallenge = await UserChallenge.findOne({
       user: req.userId,
       challenge: challengeId
     }).populate('challenge', 'activities');
-    
+
     if (!userChallenge) {
-      return res.status(404).json({ message: 'User not participating in this challenge' });
+      throw new NotFoundError('User not participating in this challenge');
     }
-    
+
     const challengeActivity = userChallenge.challenge.activities.find(
       activity => activity.name === activityId
     );
-    
+
     if (!challengeActivity) {
-      return res.status(404).json({ message: 'Activity not found in challenge' });
+      throw new NotFoundError('Activity not found in challenge');
     }
-    
+
     if (progress > challengeActivity.target) {
-      return res.status(400).json({ 
-        message: `Progress cannot exceed target of ${challengeActivity.target} ${challengeActivity.unit}` 
-      });
+      throw new ValidationError(`Progress cannot exceed target of ${challengeActivity.target} ${challengeActivity.unit}`);
     }
-    
-    //update existing or create new progress
+
     const activityIndex = userChallenge.activitiesProgress.findIndex(
       ap => ap.activityId === activityId
     );
-    
+
     if (activityIndex >= 0) {
       userChallenge.activitiesProgress[activityIndex].progress = progress;
       userChallenge.activitiesProgress[activityIndex].lastUpdated = new Date();
     } else {
-      userChallenge.activitiesProgress.push({
-        activityId,
-        progress,
-        lastUpdated: new Date()
-      });
+      userChallenge.activitiesProgress.push({ activityId, progress, lastUpdated: new Date() });
     }
-    
+
     await userChallenge.save();
-    
+
     logger.info(`userChallenge:updateProgress user=${req.userId} challenge=${challengeId} activity=${activityId} progress=${progress}`);
-    
+
     res.json(userChallenge);
   } catch (error) {
     logger.error('updateActivityProgress error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const updateChallengeStatus = async (req, res) => {
+const updateChallengeStatus = async (req, res, next) => {
   try {
     const { challengeId } = req.params;
     const { status } = req.body;
-    
+
     if (!['completed', 'abandoned'].includes(status)) {
-      return res.status(400).json({ message: 'Status must be completed or abandoned' });
+      throw new ValidationError('Status must be completed or abandoned');
     }
-    
+
     const userChallenge = await UserChallenge.findOne({
       user: req.userId,
       challenge: challengeId
     });
-    
+
     if (!userChallenge) {
-      return res.status(404).json({ message: 'User not participating in this challenge' });
+      throw new NotFoundError('User not participating in this challenge');
     }
-    
+
     userChallenge.status = status;
     userChallenge.completedAt = new Date();
-    
+
     await userChallenge.save();
-    
-    //if abandoning remove user from challenge participants
+
+    //if abandoning, remove user from challenge participants
     if (status === 'abandoned') {
       const challenge = await Challenge.findById(challengeId);
-      if (challenge && challenge.participants) {
+      if (challenge?.participants) {
         challenge.participants = challenge.participants.filter(
           participantId => participantId.toString() !== req.userId.toString()
         );
         await challenge.save();
       }
     }
-    
+
     logger.info(`userChallenge:updateStatus user=${req.userId} challenge=${challengeId} status=${status}`);
-    
+
     res.json(userChallenge);
   } catch (error) {
     logger.error('updateChallengeStatus error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
-const getChallengeParticipantsCount = async (req, res) => {
+const getChallengeParticipantsCount = async (req, res, next) => {
   try {
     const { challengeId } = req.params;
     const statuses = ['active'];
@@ -266,14 +257,14 @@ const getChallengeParticipantsCount = async (req, res) => {
       statuses.push('completed');
     }
 
-    const count = await UserChallenge.countDocuments({ 
+    const count = await UserChallenge.countDocuments({
       challenge: challengeId,
       status: { $in: statuses }
     });
     res.json({ count });
   } catch (error) {
     logger.error('getChallengeParticipantsCount error', { error, message: error.message });
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
 
@@ -285,4 +276,4 @@ module.exports = {
   updateActivityProgress,
   updateChallengeStatus,
   getChallengeParticipantsCount
-}; 
+};

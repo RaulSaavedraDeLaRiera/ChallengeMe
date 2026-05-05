@@ -88,7 +88,7 @@ describe('Challenge Endpoints', () => {
           description: 'Test challenge without title'
         });
 
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(400);
     });
 
     it('should validate activity enum values', async () => {
@@ -101,7 +101,7 @@ describe('Challenge Endpoints', () => {
           endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
 
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(400);
     });
   });
 
@@ -207,7 +207,7 @@ describe('Challenge Endpoints', () => {
         .put(`/api/challenges/${challenge._id}/join`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(409);
       expect(res.body.message).toBe('Already participating');
     });
   });

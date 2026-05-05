@@ -105,7 +105,7 @@ describe('Post Endpoints', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(400);
     });
   });
 
@@ -120,7 +120,8 @@ describe('Post Endpoints', () => {
 
     it('should get feed posts', async () => {
       const res = await request(app)
-        .get('/api/posts/feed');
+        .get('/api/posts/feed')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.statusCode).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
@@ -223,7 +224,7 @@ describe('Post Endpoints', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(400);
     });
 
     it('should return 404 for non-existent post', async () => {

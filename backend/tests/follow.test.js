@@ -95,7 +95,7 @@ describe('Follow Endpoints', () => {
         .post(`/api/follow/${targetUserId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(409);
       expect(res.body.message).toBe('Already following this user');
     });
 

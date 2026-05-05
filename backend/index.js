@@ -47,6 +47,10 @@ app.use('/api/user-challenges', userChallengeRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/follow', followRoutes);
 
+//global error handler (must be after all routes)
+const { errorHandler } = require('./middlewares/error.middleware');
+app.use(errorHandler);
+
 //connection to mongodb
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => logger.info('MongoDB connected'))
