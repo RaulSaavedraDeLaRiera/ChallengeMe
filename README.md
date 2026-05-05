@@ -14,11 +14,6 @@ The application lets you build multi-activity challenges. Each activity has a go
 
 The project is split into two parts: a backend that handles business logic and data (REST API with Node.js and MongoDB) and a frontend where users interact with the product (React with Vite). Everything is wired together and ready to run.
 
-## Deployments
-
-- Backend (Render): <https://challengeme-5cfg.onrender.com>
-- Frontend (Netlify): <https://challengemee.netlify.app/>
-
 ## Core features
 
 ### Exercise challenges
@@ -107,25 +102,20 @@ Your profile page includes quick links to:
 
 ## Test users
 
-Three demo accounts are available:
+Three demo accounts are pre-seeded in the shared database (see backend setup):
 
-- **John Doe** – <john@mail.com>
-- **David O'Connell** – <david@mail.com>
-- **Lenny** – <lenny@mail.com>
+- **John Doe** – <john@mail.com> — password: **abc123**
+- **David O'Connell** – <david@mail.com> — password: **qbc123**
+- **Lenny** – <lenny@mail.com> — password: **abc123**
 
-Passwords:
-
-- John Doe and Lenny: **abc123**
-- David: **qbc123**
-
-Feel free to explore with these accounts—John and David already have populated content, while Lenny is perfect for testing fresh flows.
+John and David already have populated content; Lenny is perfect for testing fresh flows.
 
 ## API documentation
 
-The API is fully documented with Swagger. Open the interactive documentation at:
+The API is fully documented with Swagger. Once the backend is running locally, open:
 
 ```text
-<https://challengeme-5cfg.onrender.com/api-docs>
+http://localhost:3000/api-docs
 ```
 
 There you will find every endpoint, request/response schema, and can run live calls from your browser. Covered areas include:
@@ -171,7 +161,7 @@ cd backend
 npm install
 ```
 
-Create a `.env` file with:
+Create a `.env` file in the `backend/` directory:
 
 ```ini
 PORT=3000
@@ -179,13 +169,7 @@ MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 ```
 
-To reuse the shared database you can use:
-
-```ini
-PORT=3000
-MONGODB_URI=mongodb+srv://raulsaavedrariera_db_user:Xa3IxvlbwC8bGFMc@cluster0.bl3cyfs.mongodb.net/challengeme?appName=Cluster0
-JWT_SECRET=a_secret_secret_password
-```
+> **Shared demo database**: a read/write MongoDB Atlas cluster with pre-seeded data is available on request for local testing. Contact me via the repository or LinkedIn.
 
 Then start the server:
 
@@ -202,13 +186,13 @@ cd frontend
 npm install
 ```
 
-Create a `.env` file with:
+Create a `.env` file in the `frontend/` directory:
 
 ```ini
-VITE_API_URL=https://challengeme-5cfg.onrender.com
+VITE_API_URL=http://localhost:3000
 ```
 
-Leave it empty for local development—the Vite proxy will handle API calls.
+The Vite dev server proxies API calls to the backend automatically, so this matches the default backend port.
 
 Finally, start the dev server:
 
@@ -226,11 +210,9 @@ Swagger docs and part of the written documentation were produced with help from 
 
 This monorepo bundles both backend and frontend:
 
-- Backend (`/backend`)
-  - Deploy: <https://challengeme-5cfg.onrender.com>
-  - Swagger docs: <https://challengeme-5cfg.onrender.com/api-docs>
-  - Swagger serves as the official API documentation, instead of a Postman collection.
-- Frontend (`/frontend`)
-  - Deploy: <https://challengemee.netlify.app>
+- `backend/` — Express REST API, MongoDB, JWT auth, Swagger docs
+- `frontend/` — React 19 + Vite SPA
 
-GitHub repository: <https://github.com/RaulSaavedraDeLaRiera/ChallengeMe>
+Swagger serves as the official API documentation (no Postman collection needed). Run the backend and open `http://localhost:3000/api-docs`.
+
+GitHub: <https://github.com/RaulSaavedraDeLaRiera/ChallengeMe>
