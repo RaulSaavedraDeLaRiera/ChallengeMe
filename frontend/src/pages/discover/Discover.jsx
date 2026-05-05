@@ -77,10 +77,9 @@ const Discover = () => {
         setChallenges(filteredChallenges)
         
         //load user challenges to check join status
-        const token = authStore.get()
-        if (token) {
+        if (authStore.get()) {
           try {
-            const uc = await UserChallengeService.mine(token)
+            const uc = await UserChallengeService.mine()
             setUserChallenges(Array.isArray(uc) ? uc : [])
           } catch {
             setUserChallenges([])
@@ -134,11 +133,10 @@ const Discover = () => {
   }
 
   const handleJoinChallenge = async (challengeId) => {
-    const token = authStore.get()
-    if (!token) return
-    
+    if (!authStore.get()) return
+
     try {
-      const response = await UserChallengeService.join(challengeId, token)
+      const response = await UserChallengeService.join(challengeId)
       
       //get userChallenge (either from response or response.userChallenge)
       const userChallenge = response.userChallenge || response
@@ -201,10 +199,9 @@ const Discover = () => {
 
 
   const toggleLike = async (postId) => {
-    const token = authStore.get()
-    if (!token) return
+    if (!authStore.get()) return
     try {
-      const updated = await PostService.like(postId, token)
+      const updated = await PostService.like(postId)
       setPosts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)))
     } catch { /* ignore */ }
   }

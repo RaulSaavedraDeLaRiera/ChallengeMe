@@ -1,29 +1,25 @@
-// for social posts api calls
+//social posts API calls
 import { http } from './http'
 
 export const PostService = {
-  //create a new post 
-  create: ({ title, content, challengeId }, token) => {
+  //create a new post
+  create: ({ title, content, challengeId }) => {
+    if (!content?.trim()) throw new Error('Post content is required')
+
     const payload = {
       ...(title ? { title } : {}),
       content,
       challenge: challengeId || null
     }
-    return http('/api/posts', {
-      method: 'POST',
-      body: payload,
-      token
-    })
+    return http('/api/posts', { method: 'POST', body: payload })
   },
 
   //get feed posts from followed users
-  feed: (token) => http('/api/posts/feed', { method: 'GET', token }),
+  feed: () => http('/api/posts/feed', { method: 'GET' }),
 
-  //get all posts 
+  //get all posts
   all: () => http('/api/posts', { method: 'GET' }),
 
-  //like for a post
-  like: (postId, token) => http(`/api/posts/${postId}/like`, { method: 'PUT', token })
+  //toggle like for a post
+  like: (postId) => http(`/api/posts/${postId}/like`, { method: 'PUT' })
 }
-
-

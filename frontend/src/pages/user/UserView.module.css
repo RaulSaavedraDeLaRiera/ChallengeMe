@@ -172,6 +172,38 @@
   font-size: 1rem;
 }
 
+/* Follow/unfollow feedback toast */
+.feedbackToast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: fadeInOut 3s ease forwards;
+  pointer-events: none;
+}
+
+.feedbackToast_success {
+  background-color: var(--accent-primary, #00aba9);
+  color: #fff;
+}
+
+.feedbackToast_error {
+  background-color: #e53935;
+  color: #fff;
+}
+
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /*responsive*/
 @media (max-width: 768px) {
   .userViewContainer {

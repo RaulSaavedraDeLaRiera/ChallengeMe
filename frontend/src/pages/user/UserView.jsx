@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { FaCamera, FaRunning, FaUserPlus, FaUserCheck, FaArrowLeft } from 'react-icons/fa'
 import { UserService } from '../../services/user.service'
@@ -7,10 +7,19 @@ import { PostService } from '../../services/post.service'
 import { ChallengeService } from '../../services/challenge.service'
 import { UserChallengeService } from '../../services/userChallenge.service'
 import { authStore } from '../../utils/authStore'
-import { PostCard, Avatar } from '../../components/shared' 
+import { PostCard, Avatar } from '../../components/shared'
 import { ChallengeCard } from '../../components/shared/ChallengeCard/ChallengeCard'
 import styles from './UserView.module.css'
-//user view page: public user profile with content feed and follow button
+// User view page: public user profile with content feed and follow button
+
+const getCurrentUserId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    return user._id || user.id
+  } catch {
+    return null
+  }
+}
 
 const UserView = () => {
   const { userId } = useParams()
@@ -22,38 +31,33 @@ const UserView = () => {
   const [loading, setLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
   const [followingLoading, setFollowingLoading] = useState(false)
+  const [followFeedback, setFollowFeedback] = useState(null) // { type: 'success'|'error', message: string }
 
-  const currentUserId = (() => {
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      return user._id || user.id
-    } catch {
-      return null
-    }
-  })()
+  const currentUserId = getCurrentUserId()
 
-  //load user data and check follow status
+  // Show a brief feedback message that auto-dismisses
+  const showFeedback = useCallback((type, message) => {
+    setFollowFeedback({ type, message })
+    setTimeout(() => setFollowFeedback(null), 3000)
+  }, [])
+
+  // Load user data and check follow status
   useEffect(() => {
     const load = async () => {
       setLoading(true)
       try {
-        const token = authStore.get()
-        
-        //load user
         const userData = await UserService.getById(userId)
         setUser(userData)
-        
-        //load posts and challenges
+
         const [postsData, challengesData] = await Promise.all([
           UserService.getPosts(userId),
           UserService.getChallenges(userId)
         ])
         setPosts(Array.isArray(postsData) ? postsData : [])
         setChallenges(Array.isArray(challengesData) ? challengesData : [])
-        
-        //check if current user follows this user
-        if (token && currentUserId && currentUserId !== userId) {
-          const following = await FollowService.checkFollowing(userId, currentUserId, token)
+
+        if (authStore.get() && currentUserId && currentUserId !== userId) {
+          const following = await FollowService.checkFollowing(userId, currentUserId)
           setIsFollowing(following)
         }
       } catch (error) {
@@ -62,46 +66,42 @@ const UserView = () => {
         setLoading(false)
       }
     }
-    
+
     if (userId) {
       load()
     }
   }, [userId, currentUserId])
 
-  //handle follow unfollow
+  // Handle follow/unfollow with user feedback
   const handleFollowToggle = async () => {
-    const token = authStore.get()
-    if (!token || !currentUserId || currentUserId === userId) return
-    
+    if (!authStore.get() || !currentUserId || currentUserId === userId) return
+
     setFollowingLoading(true)
     try {
       if (isFollowing) {
-        await FollowService.unfollow(userId, token)
+        await FollowService.unfollow(userId)
         setIsFollowing(false)
+        showFeedback('success', 'Unfollowed successfully')
       } else {
-        await FollowService.follow(userId, token)
+        await FollowService.follow(userId)
         setIsFollowing(true)
+        showFeedback('success', `You are now following ${user?.name || 'this user'}`)
       }
     } catch (error) {
-      console.error('Error toggling follow:', error)
+      showFeedback('error', error.message || 'Action failed, please try again')
     } finally {
       setFollowingLoading(false)
     }
   }
 
-  //handle back navigation
-  const handleBack = () => {
-    navigate(-1)
-  }
+  const handleBack = () => navigate(-1)
 
-  //join a challenge from user view
+  // Join a challenge from user view
   const handleJoinChallenge = async (challengeId) => {
-    const token = authStore.get()
-    if (!token) return
+    if (!authStore.get()) return
     try {
-      const response = await UserChallengeService.join(challengeId, token)
+      const response = await UserChallengeService.join(challengeId)
       const userChallenge = response.userChallenge || response
-      //update participants locally
       setChallenges(prev => prev.map(ch => {
         if (ch._id !== challengeId) return ch
         const participants = ch.participants || []
@@ -116,7 +116,6 @@ const UserView = () => {
     }
   }
 
-  //filter content based on selected tab
   const filteredPosts = contentFilter === 'challenges' ? [] : posts
   const filteredChallenges = contentFilter === 'posts' ? [] : challenges
 
@@ -145,7 +144,14 @@ const UserView = () => {
       <button className={styles.backButton} onClick={handleBack}>
         <FaArrowLeft />
       </button>
-      
+
+      {/* Follow/unfollow feedback toast */}
+      {followFeedback && (
+        <div className={`${styles.feedbackToast} ${styles[`feedbackToast_${followFeedback.type}`]}`}>
+          {followFeedback.message}
+        </div>
+      )}
+
       <div className={styles.header}>
         <div className={styles.userInfo}>
           <Avatar name={user?.name} className={styles.avatar} />
@@ -154,9 +160,9 @@ const UserView = () => {
             <p className={styles.userEmail}>{user.email || ''}</p>
           </div>
         </div>
-        
+
         {currentUserId && currentUserId !== userId && (
-          <button 
+          <button
             className={styles.followButton}
             onClick={handleFollowToggle}
             disabled={followingLoading}
@@ -178,20 +184,20 @@ const UserView = () => {
 
       <div className={styles.content}>
         <div className={styles.filterTabs}>
-          <button 
+          <button
             className={`${styles.filterTab} ${contentFilter === 'all' ? styles.active : ''}`}
             onClick={() => setContentFilter('all')}
           >
             All
           </button>
-          <button 
+          <button
             className={`${styles.filterTab} ${contentFilter === 'posts' ? styles.active : ''}`}
             onClick={() => setContentFilter('posts')}
           >
             <FaCamera />
             Posts
           </button>
-          <button 
+          <button
             className={`${styles.filterTab} ${contentFilter === 'challenges' ? styles.active : ''}`}
             onClick={() => setContentFilter('challenges')}
           >
@@ -203,14 +209,13 @@ const UserView = () => {
         {(contentFilter === 'all' || contentFilter === 'posts') && filteredPosts.length > 0 && (
           <div className={styles.postsList}>
             {filteredPosts.map((post) => (
-              <PostCard 
-                key={post._id} 
-                post={post} 
+              <PostCard
+                key={post._id}
+                post={post}
                 onLike={async (postId) => {
-                  const token = authStore.get()
-                  if (!token) return
+                  if (!authStore.get()) return
                   try {
-                    const updated = await PostService.like(postId, token)
+                    const updated = await PostService.like(postId)
                     setPosts(prev => prev.map(p => p._id === updated._id ? updated : p))
                   } catch {}
                 }}
@@ -223,8 +228,8 @@ const UserView = () => {
         {(contentFilter === 'all' || contentFilter === 'challenges') && filteredChallenges.length > 0 && (
           <div className={styles.challengesList}>
             {filteredChallenges.map((challenge) => (
-              <ChallengeCard 
-                key={challenge._id} 
+              <ChallengeCard
+                key={challenge._id}
                 challenge={challenge}
                 currentUserId={currentUserId}
                 onJoin={() => handleJoinChallenge(challenge._id)}
@@ -247,4 +252,3 @@ const UserView = () => {
 }
 
 export default UserView
-

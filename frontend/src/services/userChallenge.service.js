@@ -1,37 +1,35 @@
-//service for user challenge management: users participation and progress in challenges
+//service for user challenge management: participation and progress
 import { http } from './http'
 
 export const UserChallengeService = {
-  //get users active challenges with progress (for dashboard)
-  mine: (token) => http('/api/user-challenges/my-challenges', { method: 'GET', token }),
+  //get user's active challenges with progress (for dashboard)
+  mine: () => http('/api/user-challenges/my-challenges', { method: 'GET' }),
 
   //get all user challenges for profile
-  all: (token) => http('/api/user-challenges/all-challenges', { method: 'GET', token }),
+  all: () => http('/api/user-challenges/all-challenges', { method: 'GET' }),
 
   //join a challenge (creates UserChallenge record)
-  join: (challengeId, token) => http(`/api/user-challenges/${challengeId}/join`, { method: 'POST', token }),
+  join: (challengeId) => http(`/api/user-challenges/${challengeId}/join`, { method: 'POST' }),
 
   //get progress for a specific challenge
-  getProgress: (challengeId, token) => 
-    http(`/api/user-challenges/${challengeId}/progress`, { method: 'GET', token }),
+  getProgress: (challengeId) =>
+    http(`/api/user-challenges/${challengeId}/progress`, { method: 'GET' }),
 
   //update progress for a specific activity
-  updateProgress: (challengeId, activityId, progress, token) => 
+  updateProgress: (challengeId, activityId, progress) =>
     http(`/api/user-challenges/${challengeId}/progress`, {
       method: 'PUT',
-      body: { activityId, progress },
-      token
-    }), 
+      body: { activityId, progress }
+    }),
 
   //get participants count for a challenge
-  getParticipantsCount: (challengeId, { includeCompleted = false } = {}) => 
+  getParticipantsCount: (challengeId, { includeCompleted = false } = {}) =>
     http(`/api/user-challenges/${challengeId}/participants-count${includeCompleted ? '?includeCompleted=true' : ''}`, { method: 'GET' }),
 
-  //update challenge status 
-  updateStatus: (challengeId, status, token) =>
+  //update challenge status (completed or abandoned)
+  updateStatus: (challengeId, status) =>
     http(`/api/user-challenges/${challengeId}/status`, {
       method: 'PUT',
-      body: { status },
-      token
+      body: { status }
     })
 }

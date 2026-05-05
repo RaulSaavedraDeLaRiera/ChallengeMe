@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Button, Input } from '../../components/shared'
 import { ChallengeService } from '../../services/challenge.service'
-import { authStore } from '../../utils/authStore'
 import styles from './ChallengeModalForm.module.css'
 
 void [Button, Input]
@@ -75,14 +74,13 @@ export const ChallengeModalForm = ({ onSuccess }) => {
 
     setLoading(true)
     try {
-      const token = authStore.get()
       await ChallengeService.create({
         title: title.trim(),
         description: description.trim(),
         activities: payloadActivities,
         startDate: start.toISOString(),
         endDate: end.toISOString()
-      }, token)
+      })
       onSuccess?.()
     } catch (e) {
       setError(e.message || 'Error creating challenge')

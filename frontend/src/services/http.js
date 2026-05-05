@@ -1,11 +1,12 @@
-//reusable http service to parse Api responses
+//reusable HTTP service with automatic token injection and refresh
+import { authStore } from '../utils/authStore'
+
 const parse = async (res) => {
   //no content status = 204
-  if(res.status === 204) return null;
-  
+  if (res.status === 204) return null
+
   const text = await res.text()
-  //empty response if not text
-  if(!text) return null;
+  if (!text) return null
 
   try {
     return JSON.parse(text)
@@ -14,27 +15,22 @@ const parse = async (res) => {
   }
 }
 
-//global reference to auth context
+//global reference to auth context (set by App.jsx)
 let authContextRef = null
 
-//set auth context ref
 export const setAuthContextRef = (ref) => {
   authContextRef = ref
 }
 
-//attempt to refresh token when expired
-const attemptTokenRefresh = async (expiredToken) => {
+//attempt to refresh the current token
+const attemptTokenRefresh = async () => {
   try {
     const { AuthService } = await import('./auth.service')
-    const { authStore } = await import('../utils/authStore')
-    
-    //try to refresh the token
-    const response = await AuthService.refresh(expiredToken)
-    
-    //if refresh successful, save new token
-    if (response && response.token) {
+
+    const response = await AuthService.refresh()
+
+    if (response?.token) {
       authStore.set(response.token)
-      //update user data if provided
       if (response.user) {
         try {
           localStorage.setItem('user', JSON.stringify(response.user))
@@ -44,29 +40,23 @@ const attemptTokenRefresh = async (expiredToken) => {
       }
       return response.token
     }
-    
+
     return null
   } catch {
-    //refresh failed
     return null
   }
 }
 
-//handle token expiration - try refresh first, then notify context 
-const handleTokenExpiration = async (expiredToken) => {
-  const { authStore } = await import('../utils/authStore')
-  
-  //try to refresh token first
-  const newToken = await attemptTokenRefresh(expiredToken)
-  
+//handle token expiration: try refresh, then expire session if it fails
+const handleTokenExpiration = async () => {
+  const newToken = await attemptTokenRefresh()
+
   if (newToken) {
-    //token refreshed successfully, then notify context 
     if (authContextRef?.refreshToken) {
       authContextRef.refreshToken(newToken)
     }
     return newToken
   } else {
-    //refresh failed, clear token and notify context to nav
     authStore.clear()
     if (authContextRef?.expireToken) {
       authContextRef.expireToken()
@@ -75,11 +65,12 @@ const handleTokenExpiration = async (expiredToken) => {
   }
 }
 
-//reusable Api request service
-export const http = async (path, { method='GET', body, token, headers, retryOn401 = true }) => {
-  //configure the request
+//reusable API request — token is obtained internally from authStore
+export const http = async (path, { method = 'GET', body, headers, retryOn401 = true } = {}) => {
+  const token = authStore.get()
   const apiUrl = import.meta.env.VITE_API_URL || ''
-  const res = await fetch(`${apiUrl}${path}`,{
+
+  const res = await fetch(`${apiUrl}${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -89,23 +80,21 @@ export const http = async (path, { method='GET', body, token, headers, retryOn40
     body: body ? JSON.stringify(body) : undefined
   })
 
-  //handle response data
   const data = await parse(res)
-  if(!res.ok) {
-    //if token expired (401), try to refresh it
-    if(res.status === 401 && token && retryOn401) {
-      const newToken = await handleTokenExpiration(token)
-      
-      //if token was refreshed, retry the original request
+
+  if (!res.ok) {
+    //if token expired (401), try to refresh and retry once
+    if (res.status === 401 && token && retryOn401) {
+      const newToken = await handleTokenExpiration()
+
       if (newToken) {
-        return http(path, { method, body, token: newToken, headers, retryOn401: false })
+        return http(path, { method, body, headers, retryOn401: false })
       }
     }
-    
-    const message = (data && (data.err || data.message) || `Error ${res.status}`)
-    throw new Error(message);
+
+    const message = (data && (data.err || data.message)) || `Error ${res.status}`
+    throw new Error(message)
   }
 
-  //return parsed 
   return data
 }

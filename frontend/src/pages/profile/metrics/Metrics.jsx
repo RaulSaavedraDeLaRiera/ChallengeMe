@@ -15,7 +15,6 @@ import {
 } from 'chart.js'
 import { FaRunning, FaBicycle, FaWalking, FaDumbbell, FaHeart, FaStar, FaHandRock, FaFistRaised } from 'react-icons/fa'
 import { UserChallengeService } from '../../../services/userChallenge.service'
-import { authStore } from '../../../utils/authStore'
 import styles from './Metrics.module.css'
 
 ChartJS.register(
@@ -174,16 +173,9 @@ const Metrics = () => {
 
   useEffect(() => {
     const load = async () => {
-      const token = authStore.get()
-      if (!token) {
-        setUserChallenges([])
-        setLoading(false)
-        return
-      }
-
       setLoading(true)
       try {
-        const allUC = await UserChallengeService.all(token)
+        const allUC = await UserChallengeService.all()
         setUserChallenges(Array.isArray(allUC) ? allUC : [])
       } catch {
         setUserChallenges([])

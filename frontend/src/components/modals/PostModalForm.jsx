@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Button, Input } from '../../components/shared'
 import { PostService } from '../../services/post.service'
-import { authStore } from '../../utils/authStore'
 import styles from './PostModalForm.module.css'
 
 //post creation form modal component completed
@@ -24,8 +23,7 @@ export const PostModalForm = ({ onSuccess }) => {
     if (m.length > MESSAGE_LIMIT) { setError(`Message max ${MESSAGE_LIMIT} chars`); return }
     setLoading(true)
     try {
-      const token = authStore.get()
-          await PostService.create({ title: t, content: m }, token)
+      await PostService.create({ title: t, content: m })
       onSuccess?.()
     } catch (e) {
       setError(e.message || 'Error creating post')

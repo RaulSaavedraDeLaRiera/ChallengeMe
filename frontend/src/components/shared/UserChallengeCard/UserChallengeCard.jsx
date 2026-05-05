@@ -120,12 +120,11 @@ export const UserChallengeCard = ({
 
   //handle complete challenge
   const handleCompleteChallenge = async () => {
-    const token = authStore.get()
-    if (!token) return
-    
+    if (!authStore.get()) return
+
     setCompleting(true)
     try {
-      await UserChallengeService.updateStatus(challenge._id, 'completed', token)
+      await UserChallengeService.updateStatus(challenge._id, 'completed')
       
       //update local state
       setLocalUserChallenge(prev => ({
@@ -154,17 +153,15 @@ export const UserChallengeCard = ({
     const maxValue = editingActivity.target
     const clampedValue = Math.max(0, Math.min(numericValue, maxValue))
     
-    const token = authStore.get()
-    if (!token) return
-    
+    if (!authStore.get()) return
+
     setLoading(true)
     try {
       //update progress in backend and get updated userchallenge
       const updated = await UserChallengeService.updateProgress(
-        challenge._id, 
-        editingActivity.name, 
-        clampedValue, 
-        token
+        challenge._id,
+        editingActivity.name,
+        clampedValue
       )
       
       //update local state immediately for instant ypdate
@@ -208,12 +205,11 @@ export const UserChallengeCard = ({
 
   //handle abandon challenge
   const handleAbandonChallenge = async () => {
-    const token = authStore.get()
-    if (!token) return
-    
+    if (!authStore.get()) return
+
     setAbandoning(true)
     try {
-      await UserChallengeService.updateStatus(challenge._id, 'abandoned', token)
+      await UserChallengeService.updateStatus(challenge._id, 'abandoned')
       
       //update local state to reflect removal immediately
       setLocalUserChallenge(prev => ({
